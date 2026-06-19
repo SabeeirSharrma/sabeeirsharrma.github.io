@@ -1,6 +1,6 @@
 ---
-import MainLayout from './MainLayout.astro';
-import Sidebar from '../components/Sidebar.astro';
+import MainLayout from "./MainLayout.astro";
+import Sidebar from "../components/Sidebar.astro";
 
 export interface Props {
   title: string;
@@ -10,7 +10,11 @@ export interface Props {
 
 const { title, description, project } = Astro.props;
 ---
-<MainLayout title={`${title} — ${project.toUpperCase()} Docs`} description={description}>
+
+<MainLayout
+  title={`${title} — ${project.toUpperCase()} Docs`}
+  description={description}
+>
   <div class="docs-wrapper">
     <Sidebar project={project} />
     <article class="docs-content">
@@ -60,9 +64,15 @@ const { title, description, project } = Astro.props;
     text-decoration: none;
     transition: color 0.2s;
   }
-  .breadcrumbs a:hover { color: var(--color-ember-light); }
-  .breadcrumbs .sep { color: var(--color-border); }
-  .breadcrumbs .current { color: var(--color-ember-core); }
+  .breadcrumbs a:hover {
+    color: var(--color-ember-light);
+  }
+  .breadcrumbs .sep {
+    color: var(--color-border);
+  }
+  .breadcrumbs .current {
+    color: var(--color-ember-core);
+  }
 
   /* Header */
   .docs-header {
@@ -96,13 +106,17 @@ const { title, description, project } = Astro.props;
     margin-top: 2.5rem;
     margin-bottom: 1rem;
   }
-  .docs-body h1 { font-size: 2rem; }
+  .docs-body h1 {
+    font-size: 2rem;
+  }
   .docs-body h2 {
     font-size: 1.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--color-border);
   }
-  .docs-body h3 { font-size: 1.25rem; }
+  .docs-body h3 {
+    font-size: 1.25rem;
+  }
 
   .docs-body p {
     color: var(--color-muted-text);
@@ -120,7 +134,9 @@ const { title, description, project } = Astro.props;
     color: var(--color-ember-glow);
   }
 
-  .docs-body strong { color: var(--color-primary-text); }
+  .docs-body strong {
+    color: var(--color-primary-text);
+  }
 
   /* Inline code */
   .docs-body code {
@@ -217,4 +233,146 @@ const { title, description, project } = Astro.props;
     border: 1px solid var(--color-border);
     max-width: 100%;
   }
+
+  .docs-body pre {
+    position: relative;
+  }
+
+  .code-copy-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-muted-text);
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.15s ease;
+    z-index: 10;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.04em;
+  }
+
+  .docs-body pre:hover .code-copy-btn {
+    opacity: 1;
+  }
+
+  .code-copy-btn:hover {
+    background: var(--color-elevated);
+    color: var(--color-primary-text);
+    border-color: var(--color-cinder-mid);
+  }
+
+  .code-copy-btn:active {
+    transform: scale(0.94);
+  }
+
+  .code-copy-btn.copied {
+    opacity: 1;
+    color: #4ade80;
+    border-color: #4ade8040;
+    background: #4ade8012;
+  }
+
+  .code-copy-btn .copy-icon,
+  .code-copy-btn .check-icon {
+    width: 14px;
+    height: 14px;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .code-copy-btn .check-icon {
+    display: none;
+  }
+
+  .code-copy-btn.copied .copy-icon {
+    display: none;
+  }
+
+  .code-copy-btn.copied .check-icon {
+    display: block;
+  }
 </style>
+
+<script>
+  declare const lucide: { createIcons: () => void } | undefined;
+
+  function initCopyButtons() {
+    const codeBlocks = document.querySelectorAll(".docs-body pre");
+
+    codeBlocks.forEach((pre) => {
+      // Don't add duplicate buttons
+      if (pre.querySelector(".code-copy-btn")) return;
+
+      const btn = document.createElement("button");
+      btn.className = "code-copy-btn";
+      btn.setAttribute("aria-label", "Copy code");
+      btn.setAttribute("title", "Copy");
+      btn.innerHTML = `
+        <i data-lucide="copy" class="copy-icon"></i>
+        <i data-lucide="check" class="check-icon"></i>
+        <span class="copy-label">Copy</span>
+      `;
+
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code");
+        if (!code) return;
+
+        // Get the raw text and strip leading $ prompts from each line
+        let text = code.innerText || code.textContent || "";
+        text = text
+          .split("\n")
+          .map((line) => line.replace(/^\s*\$\s?/, ""))
+          .join("\n")
+          .trimEnd();
+
+        try {
+          await navigator.clipboard.writeText(text);
+
+          // Visual feedback
+          btn.classList.add("copied");
+          const label = btn.querySelector(".copy-label");
+          if (label) label.textContent = "Copied!";
+
+          setTimeout(() => {
+            btn.classList.remove("copied");
+            if (label) label.textContent = "Copy";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy:", err);
+        }
+      });
+
+      pre.appendChild(btn);
+    });
+
+    // Initialize Lucide icons for the newly added buttons
+    if (typeof lucide !== "undefined") {
+      lucide.createIcons();
+    }
+  }
+
+  // Run on initial load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCopyButtons);
+  } else {
+    initCopyButtons();
+  }
+
+  // Re-run after Astro page transitions (View Transitions)
+  document.addEventListener("astro:page-load", initCopyButtons);
+</script>
