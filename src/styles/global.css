@@ -372,6 +372,7 @@
   .card {
     @apply bg-card border border-border rounded-lg p-6 shadow-lg transition-all duration-300;
     position: relative;
+    cursor: pointer;
   }
 
   .card:hover {
