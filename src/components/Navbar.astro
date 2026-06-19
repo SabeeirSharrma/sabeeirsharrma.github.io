@@ -1,0 +1,21 @@
+---
+// Navbar.astro
+---
+<header class="sticky top-0 z-50 w-full border-b border-border bg-base/80 backdrop-blur">
+  <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <a href="/" class="flex items-center gap-2">
+        <span class="font-heading text-xl text-white tracking-widest uppercase">The Cinder Project</span>
+      </a>
+      <nav class="hidden md:flex gap-4">
+        <a href="/cpac" class="text-muted-text hover:text-white transition-colors">CPAC</a>
+        <a href="/cinderos" class="text-muted-text hover:text-white transition-colors">CinderOS</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="https://github.com/sabeeirsharrma" target="_blank" rel="noopener noreferrer" class="text-muted-text hover:text-white">
+        GitHub
+      </a>
+    </div>
+  </div>
+</header>

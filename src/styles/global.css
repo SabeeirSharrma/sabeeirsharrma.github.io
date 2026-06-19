@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+@theme {
+  --font-heading: "Black Ops One", system-ui, sans-serif;
+  --font-body: "Roboto Condensed", "Oswald", system-ui, sans-serif;
+
+  /* Backgrounds */
+  --color-base: #111111;
+  --color-surface: #1A1A1A;
+  --color-card: #242424;
+  --color-elevated: #2E2E2E;
+
+  /* Deep Red Ramp */
+  --color-cinder-dark: #4A0000;
+  --color-cinder-mid: #6B0000;
+  --color-deep-red: #8B0000;
+  --color-firebrick: #B22222;
+
+  /* Ember Accent Ramp */
+  --color-ember-deep: #E63E00;
+  --color-ember-core: #FF4500;
+  --color-ember-light: #FF6A33;
+  --color-ember-glow: #FF9A6C;
+
+  /* Text & Borders */
+  --color-primary-text: #FFFFFF;
+  --color-muted-text: #AAAAAA;
+  --color-border: #3A3A3A;
+  --color-danger-tint: color-mix(in srgb, #8B0000 20%, transparent);
+
+  /* Mapping some defaults for easier tailwind usage */
+  --color-background: var(--color-base);
+  --color-foreground: var(--color-primary-text);
+  
+  --color-primary: var(--color-deep-red);
+  --color-secondary: var(--color-ember-core);
+  --color-accent: var(--color-ember-glow);
+}
+
+@layer base {
+  body {
+    @apply bg-base text-primary-text font-body antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-wide;
+  }
+
+  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
+  h2 { @apply text-3xl md:text-4xl; }
+  h3 { @apply text-2xl md:text-3xl; }
+  
+  p { @apply leading-relaxed; }
+  
+  a { @apply transition-colors duration-200; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-firebrick text-white font-heading tracking-wider rounded-md hover:bg-ember-core focus:ring-2 focus:ring-ember-glow focus:outline-none transition-all duration-300;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-surface text-white border border-border font-heading tracking-wider rounded-md hover:bg-card hover:border-ember-core focus:ring-2 focus:ring-ember-glow focus:outline-none transition-all duration-300;
+  }
+  .card {
+    @apply bg-card border border-border rounded-lg p-6 shadow-lg hover:shadow-xl hover:border-cinder-mid transition-all duration-300;
+  }
+}

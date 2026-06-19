@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  project: string;
+}
+
+const { project } = Astro.props;
+
+// Fetch all docs and filter by the current project
+const allDocs = await getCollection('docs');
+const projectDocs = allDocs.filter((doc: any) => doc.id.startsWith(`${project}/`));
+
+// Sort by order if provided in frontmatter, else alphabetically by title
+projectDocs.sort((a: any, b: any) => {
+  const orderA = a.data.order ?? 999;
+  const orderB = b.data.order ?? 999;
+  if (orderA !== orderB) {
+    return orderA - orderB;
+  }
+  return a.data.title.localeCompare(b.data.title);
+});
+---
+<aside class="w-64 flex-shrink-0 sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto hidden md:block border-r border-border pr-4">
+  <h3 class="font-heading text-lg text-white mb-4 uppercase tracking-wider">{project} Docs</h3>
+  <ul class="space-y-2">
+    {projectDocs.map((doc: any) => {
+      // Create slug path correctly (removing the project/ prefix to match routing logic if necessary,
+      // actually the route is /[project]/docs/[slug])
+      // doc.slug might look like 'cpac/installation', so we link to `/${doc.slug.replace('/', '/docs/')}`
+      // wait, doc.slug in getCollection handles id 'cpac/installation.md' as slug 'cpac/installation'
+      const parts = doc.slug.split('/');
+      const proj = parts[0];
+      const rest = parts.slice(1).join('/');
+      
+      // If it's an index page (e.g. `cpac/index.md`), it might just be `cpac` or `cpac/index`.
+      // Let's ensure standard routing
+      const link = rest ? `/${proj}/docs/${rest}` : `/${proj}/docs`;
+      
+      return (
+        <li>
+          <a 
+            href={link} 
+            class={`block px-3 py-2 rounded-md text-muted-text hover:bg-surface hover:text-white transition-colors text-sm`}
+          >
+            {doc.data.title}
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</aside>

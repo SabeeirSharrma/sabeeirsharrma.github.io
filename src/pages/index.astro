@@ -1,11 +1,99 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/MainLayout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import MainLayout from '../layouts/MainLayout.astro';
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<MainLayout title="Home">
+  <!-- Hero Section -->
+  <section class="relative min-h-[70vh] flex flex-col justify-center items-center text-center px-4 overflow-hidden">
+    <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background: radial-gradient(circle at center, var(--color-ember-core) 0%, transparent 70%); blur(100px);"></div>
+    <div class="z-10 max-w-4xl">
+      <h1 class="text-5xl md:text-7xl font-heading mb-6 tracking-wider">
+        <span class="text-white">The </span><span class="text-ember-core">Cinder</span><span class="text-white"> Project</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-muted-text mb-10 max-w-2xl mx-auto">
+        Building open software that lasts.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="#projects" class="btn-primary">View Projects</a>
+        <a href="#docs" class="btn-secondary">Read Docs</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission Section -->
+  <section class="py-20 bg-surface border-y border-border">
+    <div class="container mx-auto px-4 text-center max-w-3xl">
+      <h2 class="text-3xl font-heading text-white mb-6 uppercase tracking-widest">Our Mission</h2>
+      <p class="text-lg text-muted-text leading-relaxed">
+        The Cinder Project develops and maintains open-source software with a focus on stability, transparency, and long-term maintainability.
+      </p>
+    </div>
+  </section>
+
+  <!-- Featured Projects -->
+  <section id="projects" class="py-24 container mx-auto px-4">
+    <h2 class="text-4xl font-heading text-white mb-12 text-center uppercase tracking-widest">Featured Projects</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      
+      <!-- CPAC Card -->
+      <div class="card group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-deep-red rounded-bl-full opacity-10 group-hover:opacity-30 transition-opacity duration-300"></div>
+        <h3 class="text-2xl font-heading text-white mb-4">CPAC</h3>
+        <p class="text-muted-text mb-8">
+          Package management and deployment. A tool built for seamless integration and robust dependency resolution.
+        </p>
+        <div class="flex gap-4">
+          <a href="/cpac" class="text-ember-light hover:text-ember-glow font-bold uppercase tracking-wider text-sm transition-colors">Cpac Page</a>
+          <a href="/cpac/docs" class="text-muted-text hover:text-white uppercase tracking-wider text-sm transition-colors">Docs</a>
+        </div>
+      </div>
+
+      <!-- CinderOS Card -->
+      <div class="card group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-ember-core rounded-bl-full opacity-10 group-hover:opacity-30 transition-opacity duration-300"></div>
+        <h3 class="text-2xl font-heading text-white mb-4">CinderOS</h3>
+        <p class="text-muted-text mb-8">
+          A Cinder Project operating system. Lightweight, modular, and designed from the ground up for stability and performance.
+        </p>
+        <div class="flex gap-4">
+          <a href="/cinderos" class="text-ember-light hover:text-ember-glow font-bold uppercase tracking-wider text-sm transition-colors">CinderOS Page</a>
+          <a href="/cinderos/docs" class="text-muted-text hover:text-white uppercase tracking-wider text-sm transition-colors">Docs</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Roadmap Preview -->
+  <section class="py-20 bg-surface border-y border-border">
+    <div class="container mx-auto px-4 max-w-4xl">
+      <h2 class="text-3xl font-heading text-white mb-10 text-center uppercase tracking-widest">Roadmap Preview</h2>
+      
+      <div class="space-y-6">
+        <div class="flex items-center gap-6 bg-base p-6 rounded-lg border border-border">
+          <div class="w-16 h-16 bg-cinder-mid flex items-center justify-center rounded text-white font-heading text-xl">1</div>
+          <div>
+            <h4 class="text-xl font-heading text-white">CPAC</h4>
+            <p class="text-muted-text">Initial stable release and ecosystem integration.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-6 bg-base p-6 rounded-lg border border-border">
+          <div class="w-16 h-16 bg-ember-core flex items-center justify-center rounded text-white font-heading text-xl">2</div>
+          <div>
+            <h4 class="text-xl font-heading text-white">CinderOS</h4>
+            <p class="text-muted-text">Core architecture prototyping and kernel selection.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-6 bg-base p-6 rounded-lg border border-border opacity-60">
+          <div class="w-16 h-16 bg-elevated flex items-center justify-center rounded text-muted-text font-heading text-xl">3</div>
+          <div>
+            <h4 class="text-xl font-heading text-white">Future Projects</h4>
+            <p class="text-muted-text">Expanding the ecosystem with utility applications.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</MainLayout>

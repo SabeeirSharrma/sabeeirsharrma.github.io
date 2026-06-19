@@ -1,0 +1,57 @@
+---
+import MainLayout from './MainLayout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  project: string; // Used to filter sidebar links
+}
+
+const { title, description, project } = Astro.props;
+---
+<MainLayout title={title} description={description}>
+  <div class="container mx-auto px-4 py-8 flex gap-8">
+    <Sidebar project={project} />
+    <article class="flex-1 min-w-0 prose prose-invert prose-cinder max-w-none">
+      <slot />
+    </article>
+  </div>
+</MainLayout>
+
+<style is:global>
+  /* Customizing the prose to fit our aesthetic using global styles */
+  .prose-cinder h1, .prose-cinder h2, .prose-cinder h3, .prose-cinder h4 {
+    font-family: var(--font-heading);
+    color: var(--color-primary-text);
+  }
+  .prose-cinder a {
+    color: var(--color-ember-light);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .prose-cinder a:hover {
+    color: var(--color-ember-glow);
+  }
+  .prose-cinder p {
+    color: var(--color-muted-text);
+  }
+  .prose-cinder code {
+    background-color: var(--color-surface);
+    color: var(--color-ember-light);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .prose-cinder pre {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .prose-cinder blockquote {
+    border-left-color: var(--color-cinder-mid);
+    color: var(--color-muted-text);
+    font-style: italic;
+  }
+</style>
