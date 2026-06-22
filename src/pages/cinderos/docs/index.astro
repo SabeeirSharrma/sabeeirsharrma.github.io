@@ -1,15 +1,5 @@
 ---
-import { getCollection, render } from 'astro:content';
-import DocsLayout from '../../../layouts/DocsLayout.astro';
-
-const allDocs = await getCollection('docs');
-const entry = allDocs.find((doc: any) => {
-  return doc.id === 'cinderos/index' || doc.id === 'cinderos/index.md' || doc.id === 'cinderos';
-});
-if (!entry) throw new Error(`Doc not found for cinderos index. Available IDs: ${allDocs.map((d: any) => d.id).join(', ')}`);
-const { Content } = await render(entry);
+import SinglePageDocsLayout from '../../../layouts/SinglePageDocsLayout.astro';
 ---
 
-<DocsLayout title={entry.data.title} description={entry.data.description} project="cinderos">
-  <Content />
-</DocsLayout>
+<SinglePageDocsLayout project="cinderos" />

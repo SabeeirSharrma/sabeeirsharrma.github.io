@@ -1,17 +1,5 @@
 ---
-import { getCollection, render } from 'astro:content';
-import DocsLayout from '../../../layouts/DocsLayout.astro';
-
-// Find the introduction/index doc for cpac
-const allDocs = await getCollection('docs');
-const entry = allDocs.find((doc: any) => {
-  // Match cpac/index, cpac/index.md, or just cpac (if glob strips index)
-  return doc.id === 'cpac/index' || doc.id === 'cpac/index.md' || doc.id === 'cpac';
-});
-if (!entry) throw new Error(`Doc not found for cpac index. Available IDs: ${allDocs.map((d: any) => d.id).join(', ')}`);
-const { Content } = await render(entry);
+import SinglePageDocsLayout from '../../../layouts/SinglePageDocsLayout.astro';
 ---
 
-<DocsLayout title={entry.data.title} description={entry.data.description} project="cpac">
-  <Content />
-</DocsLayout>
+<SinglePageDocsLayout project="cpac" />

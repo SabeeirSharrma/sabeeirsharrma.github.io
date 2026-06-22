@@ -1,0 +1,461 @@
+---
+import MainLayout from "./MainLayout.astro";
+import Sidebar from "../components/Sidebar.astro";
+import { getCollection, render } from 'astro:content';
+
+export interface Props {
+  project: string;
+  projectLabel?: string;
+}
+
+const { project, projectLabel } = Astro.props;
+const label = projectLabel || project.toUpperCase();
+
+// Fetch all docs for this project
+const allDocs = await getCollection('docs');
+const projectDocs = allDocs.filter((doc: any) => doc.id.startsWith(`${project}/`) || doc.id === project);
+
+// Sort by order
+projectDocs.sort((a: any, b: any) => {
+  const orderA = a.data.order ?? 999;
+  const orderB = b.data.order ?? 999;
+  if (orderA !== orderB) return orderA - orderB;
+  return a.data.title.localeCompare(b.data.title);
+});
+
+// Render all docs and extract h2 headings from body
+const renderedDocs = await Promise.all(
+  projectDocs.map(async (doc: any) => {
+    const { Content } = await render(doc);
+    
+    // Extract slug from doc id (e.g. "cpac/installation" -> "installation", "cpac/index" -> "index")
+    const parts = doc.id.split('/');
+    const slug = parts.length > 1 ? parts.slice(1).join('/') : doc.id;
+    // Prefix with 'topic-' to avoid ID collisions with markdown-generated heading IDs
+    const sectionId = `topic-${slug}`;
+    
+    // Extract ## headings from the raw body for sidebar sub-topics
+    const h2Regex = /^##\s+(.+)$/gm;
+    const headings: { text: string; id: string }[] = [];
+    let match;
+    while ((match = h2Regex.exec(doc.body || '')) !== null) {
+      const text = match[1].trim();
+      // Generate an id that matches what Astro's markdown renderer produces
+      const id = text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      headings.push({ text, id });
+    }
+    
+    return { doc, Content, sectionId, slug, headings };
+  })
+);
+
+// Build sidebar data to pass as JSON
+const sidebarData = renderedDocs.map(({ doc, sectionId, headings }) => ({
+  title: doc.data.title,
+  sectionId,
+  headings,
+}));
+---
+
+<MainLayout
+  title={`${label} Documentation`}
+  description={`Documentation for ${label}`}
+>
+  <div class="docs-wrapper">
+    <Sidebar project={project} sidebarData={sidebarData} />
+    <article class="docs-content">
+      <div class="docs-header">
+        <div class="breadcrumbs">
+          <a href="/">Home</a>
+          <span class="sep">/</span>
+          <a href={`/${project}`}>{label}</a>
+          <span class="sep">/</span>
+          <span class="current">Documentation</span>
+        </div>
+        <h1 class="docs-title">{label} Documentation</h1>
+      </div>
+      <div class="docs-body">
+        {renderedDocs.map(({ doc, Content, sectionId }, idx) => (
+          <section id={sectionId} class="doc-section" data-section-id={sectionId}>
+            <div class="section-divider-wrap">
+              {idx > 0 && <hr class="section-divider" />}
+              <h2 class="section-heading">{doc.data.title}</h2>
+              {doc.data.description && <p class="section-description">{doc.data.description}</p>}
+            </div>
+            <div class="section-content">
+              <Content />
+            </div>
+          </section>
+        ))}
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style is:global>
+  .docs-wrapper {
+    display: flex;
+    gap: 2rem;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .docs-content {
+    flex: 1;
+    min-width: 0;
+    max-width: 52rem;
+  }
+
+  /* Breadcrumbs */
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .breadcrumbs a {
+    color: var(--color-muted-text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .breadcrumbs a:hover {
+    color: var(--color-ember-light);
+  }
+  .breadcrumbs .sep {
+    color: var(--color-border);
+  }
+  .breadcrumbs .current {
+    color: var(--color-ember-core);
+  }
+
+  /* Header */
+  .docs-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .docs-title {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    color: var(--color-primary-text);
+    margin: 0 0 0.5rem 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* Sections */
+  .doc-section {
+    scroll-margin-top: 6rem;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 3rem 0 2rem 0;
+  }
+
+  .section-heading {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    color: var(--color-primary-text);
+    margin: 0 0 0.5rem 0;
+    letter-spacing: 0.05em;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-cinder-mid);
+  }
+
+  .section-description {
+    color: var(--color-muted-text);
+    font-size: 0.95rem;
+    margin: 0 0 1.5rem 0;
+  }
+
+  .section-content {
+    padding-bottom: 1rem;
+  }
+
+  /* ============================
+     Markdown Body Styling 
+     ============================ */
+  .docs-body h1,
+  .docs-body h2,
+  .docs-body h3,
+  .docs-body h4 {
+    font-family: var(--font-heading);
+    color: var(--color-primary-text);
+    letter-spacing: 0.04em;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    scroll-margin-top: 6rem;
+  }
+  .docs-body h1 {
+    font-size: 2rem;
+  }
+  .docs-body h2 {
+    font-size: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .docs-body h3 {
+    font-size: 1.25rem;
+  }
+
+  .docs-body p {
+    color: var(--color-muted-text);
+    line-height: 1.8;
+    margin: 1rem 0;
+  }
+
+  .docs-body a {
+    color: var(--color-ember-light);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .docs-body a:hover {
+    color: var(--color-ember-glow);
+  }
+
+  .docs-body strong {
+    color: var(--color-primary-text);
+  }
+
+  /* Inline code */
+  .docs-body code {
+    background: var(--color-surface);
+    color: var(--color-ember-light);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.875em;
+    border: 1px solid var(--color-border);
+  }
+
+  /* Code blocks */
+  .docs-body pre {
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    position: relative;
+  }
+  .docs-body pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary-text);
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  /* Lists */
+  .docs-body ul,
+  .docs-body ol {
+    color: var(--color-muted-text);
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+    line-height: 1.8;
+  }
+  .docs-body li {
+    margin: 0.4rem 0;
+  }
+  .docs-body li::marker {
+    color: var(--color-ember-core);
+  }
+
+  /* Blockquotes */
+  .docs-body blockquote {
+    border-left: 3px solid var(--color-cinder-mid);
+    padding: 0.75rem 1.25rem;
+    margin: 1.5rem 0;
+    background: var(--color-surface);
+    border-radius: 0 8px 8px 0;
+  }
+  .docs-body blockquote p {
+    color: var(--color-muted-text);
+    font-style: italic;
+  }
+
+  /* Tables */
+  .docs-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  .docs-body th {
+    background: var(--color-surface);
+    color: var(--color-primary-text);
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--color-cinder-mid);
+  }
+  .docs-body td {
+    padding: 0.75rem 1rem;
+    color: var(--color-muted-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .docs-body tr:hover td {
+    background: var(--color-surface);
+  }
+
+  /* Horizontal rules */
+  .docs-body hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 2.5rem 0;
+  }
+
+  /* Images */
+  .docs-body img {
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    max-width: 100%;
+  }
+
+  /* The section heading styling should not clash with inline h2s from MD */
+  .section-heading {
+    border-bottom-color: var(--color-cinder-mid) !important;
+    border-bottom-width: 2px !important;
+  }
+
+  .code-copy-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-muted-text);
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.15s ease;
+    z-index: 10;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.04em;
+  }
+
+  .docs-body pre:hover .code-copy-btn {
+    opacity: 1;
+  }
+
+  .code-copy-btn:hover {
+    background: var(--color-elevated);
+    color: var(--color-primary-text);
+    border-color: var(--color-cinder-mid);
+  }
+
+  .code-copy-btn:active {
+    transform: scale(0.94);
+  }
+
+  .code-copy-btn.copied {
+    opacity: 1;
+    color: #4ade80;
+    border-color: #4ade8040;
+    background: #4ade8012;
+  }
+
+  .code-copy-btn .copy-icon,
+  .code-copy-btn .check-icon {
+    width: 14px;
+    height: 14px;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .code-copy-btn .check-icon {
+    display: none;
+  }
+
+  .code-copy-btn.copied .copy-icon {
+    display: none;
+  }
+
+  .code-copy-btn.copied .check-icon {
+    display: block;
+  }
+</style>
+
+<script>
+  declare const lucide: { createIcons: () => void } | undefined;
+
+  function initCopyButtons() {
+    const codeBlocks = document.querySelectorAll(".docs-body pre");
+
+    codeBlocks.forEach((pre) => {
+      if (pre.querySelector(".code-copy-btn")) return;
+
+      const btn = document.createElement("button");
+      btn.className = "code-copy-btn";
+      btn.setAttribute("aria-label", "Copy code");
+      btn.setAttribute("title", "Copy");
+      btn.innerHTML = `
+        <i data-lucide="copy" class="copy-icon"></i>
+        <i data-lucide="check" class="check-icon"></i>
+        <span class="copy-label">Copy</span>
+      `;
+
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code");
+        if (!code) return;
+
+        let text = (code as HTMLElement).innerText || code.textContent || "";
+        text = text
+          .split("\n")
+          .map((line) => line.replace(/^\s*\$\s?/, ""))
+          .join("\n")
+          .trimEnd();
+
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.classList.add("copied");
+          const label = btn.querySelector(".copy-label");
+          if (label) label.textContent = "Copied!";
+
+          setTimeout(() => {
+            btn.classList.remove("copied");
+            if (label) label.textContent = "Copy";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy:", err);
+        }
+      });
+
+      pre.appendChild(btn);
+    });
+
+    if (typeof lucide !== "undefined") {
+      lucide.createIcons();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCopyButtons);
+  } else {
+    initCopyButtons();
+  }
+
+  document.addEventListener("astro:page-load", initCopyButtons);
+</script>

@@ -1,53 +1,21 @@
 ---
 import { getCollection } from 'astro:content';
 
+export interface SidebarItem {
+  title: string;
+  sectionId: string;
+  headings: { text: string; id: string }[];
+}
+
 export interface Props {
   project: string;
+  sidebarData: SidebarItem[];
 }
 
-const { project } = Astro.props;
-const currentPath = Astro.url.pathname;
-
-// Fetch all docs and filter by the current project
-const allDocs = await getCollection('docs');
-const projectDocs = allDocs.filter((doc: any) => doc.id.startsWith(`${project}/`) || doc.id === project);
-
-// Sort by order if provided in frontmatter, else alphabetically by title
-projectDocs.sort((a: any, b: any) => {
-  const orderA = a.data.order ?? 999;
-  const orderB = b.data.order ?? 999;
-  if (orderA !== orderB) {
-    return orderA - orderB;
-  }
-  return a.data.title.localeCompare(b.data.title);
-});
-
-// Build links from entry IDs
-// With glob loader, id is like "cpac/installation" (no .md extension)
-// We want links like /cpac/docs/installation or /cpac/docs for index
-function buildLink(docId: string): string {
-  // Handle case where index.md id is just the project name (no slash)
-  if (!docId.includes('/')) {
-    return `/${docId}/docs`;
-  }
-  const parts = docId.split('/');
-  const proj = parts[0];
-  const rest = parts.slice(1).join('/');
-  // index page → /project/docs
-  if (rest === 'index' || rest === '') {
-    return `/${proj}/docs`;
-  }
-  return `/${proj}/docs/${rest}`;
-}
-
-function isActive(link: string): boolean {
-  const normalized = currentPath.replace(/\/$/, '');
-  const normalizedLink = link.replace(/\/$/, '');
-  return normalized === normalizedLink;
-}
+const { project, sidebarData } = Astro.props;
 ---
 
-<aside class="sidebar">
+<aside class="sidebar" data-sidebar>
   <div class="sidebar-header">
     <div class="sidebar-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -60,21 +28,41 @@ function isActive(link: string): boolean {
   
   <nav class="sidebar-nav">
     <ul>
-      {projectDocs.map((doc: any) => {
-        const link = buildLink(doc.id);
-        const active = isActive(link);
-        return (
-          <li>
-            <a 
-              href={link}
-              class:list={['sidebar-link', { active }]}
-            >
-              <span class="link-indicator"></span>
-              {doc.data.title}
-            </a>
-          </li>
-        );
-      })}
+      {sidebarData.map((item: SidebarItem) => (
+        <li class="sidebar-topic" data-topic-id={item.sectionId}>
+          <a 
+            href={`#${item.sectionId}`}
+            class="sidebar-link"
+            data-section-target={item.sectionId}
+          >
+            <span class="link-indicator"></span>
+            <span class="link-text">{item.title}</span>
+            {item.headings.length > 0 && (
+              <span class="expand-arrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            )}
+          </a>
+          {item.headings.length > 0 && (
+            <ul class="sub-topics" data-subtopics-for={item.sectionId}>
+              {item.headings.map((h) => (
+                <li>
+                  <a 
+                    href={`#${h.id}`}
+                    class="sub-topic-link"
+                    data-subtopic-target={h.id}
+                  >
+                    <span class="sub-indicator"></span>
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
     </ul>
   </nav>
 
@@ -88,6 +76,171 @@ function isActive(link: string): boolean {
     </a>
   </div>
 </aside>
+
+<script>
+  function initSidebar() {
+    const sidebar = document.querySelector('[data-sidebar]');
+    if (!sidebar) return;
+
+    const sections = document.querySelectorAll<HTMLElement>('.doc-section[data-section-id]');
+    const topicLinks = sidebar.querySelectorAll<HTMLAnchorElement>('.sidebar-link[data-section-target]');
+    const subTopicLinks = sidebar.querySelectorAll<HTMLAnchorElement>('.sub-topic-link[data-subtopic-target]');
+    const allSubTopicLists = sidebar.querySelectorAll<HTMLUListElement>('.sub-topics');
+
+    // Track which section is currently active
+    let activeSection: string | null = null;
+    let activeSubTopic: string | null = null;
+
+    // Collapse all sub-topic lists
+    function collapseAll() {
+      allSubTopicLists.forEach(ul => {
+        ul.classList.remove('expanded');
+        ul.style.maxHeight = '0px';
+      });
+      topicLinks.forEach(link => link.classList.remove('active'));
+      subTopicLinks.forEach(link => link.classList.remove('active'));
+
+      // Reset expand arrows
+      sidebar.querySelectorAll('.expand-arrow').forEach(arrow => {
+        arrow.classList.remove('rotated');
+      });
+    }
+
+    // Expand a specific section's sub-topics
+    function expandSection(sectionId: string) {
+      const ul = sidebar.querySelector<HTMLUListElement>(`[data-subtopics-for="${sectionId}"]`);
+      const topicItem = sidebar.querySelector<HTMLElement>(`[data-topic-id="${sectionId}"]`);
+      const link = sidebar.querySelector<HTMLAnchorElement>(`[data-section-target="${sectionId}"]`);
+
+      if (link) {
+        link.classList.add('active');
+      }
+
+      if (topicItem) {
+        const arrow = topicItem.querySelector('.expand-arrow');
+        if (arrow) arrow.classList.add('rotated');
+      }
+
+      if (ul) {
+        ul.classList.add('expanded');
+        // Calculate natural height for smooth animation
+        ul.style.maxHeight = ul.scrollHeight + 'px';
+      }
+    }
+
+    // Highlight a sub-topic
+    function highlightSubTopic(headingId: string) {
+      subTopicLinks.forEach(link => link.classList.remove('active'));
+      const target = sidebar.querySelector<HTMLAnchorElement>(`[data-subtopic-target="${headingId}"]`);
+      if (target) {
+        target.classList.add('active');
+      }
+    }
+
+    // --- IntersectionObserver for sections ---
+    const sectionObserver = new IntersectionObserver((entries) => {
+      // Find the topmost visible section
+      let topSection: { id: string; top: number } | null = null;
+      
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sectionId = (entry.target as HTMLElement).dataset.sectionId!;
+          const rect = entry.boundingClientRect;
+          if (!topSection || rect.top < topSection.top) {
+            topSection = { id: sectionId, top: rect.top };
+          }
+        }
+      });
+
+      if (topSection) {
+        const newSection = (topSection as { id: string; top: number }).id;
+        if (newSection !== activeSection) {
+          activeSection = newSection;
+          collapseAll();
+          expandSection(newSection);
+        }
+      }
+    }, {
+      threshold: 0,
+      rootMargin: '-80px 0px -60% 0px'
+    });
+
+    sections.forEach(section => sectionObserver.observe(section));
+
+    // --- IntersectionObserver for h2 headings within sections ---
+    const allH2s = document.querySelectorAll<HTMLElement>('.docs-body h2[id]');
+    
+    const headingObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const headingId = entry.target.id;
+          activeSubTopic = headingId;
+          highlightSubTopic(headingId);
+        }
+      });
+    }, {
+      threshold: 0,
+      rootMargin: '-80px 0px -70% 0px'
+    });
+
+    allH2s.forEach(h2 => headingObserver.observe(h2));
+
+    // --- Click handlers for smooth scrolling ---
+    topicLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.dataset.sectionTarget!;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          activeSection = targetId;
+          collapseAll();
+          expandSection(targetId);
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    subTopicLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.dataset.subtopicTarget!;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          highlightSubTopic(targetId);
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Initialize: expand the first section
+    if (sections.length > 0) {
+      const firstId = (sections[0] as HTMLElement).dataset.sectionId!;
+      activeSection = firstId;
+      expandSection(firstId);
+    }
+
+    // Handle hash on load (e.g. direct link to #installation)
+    if (window.location.hash) {
+      const hash = window.location.hash.slice(1);
+      const targetEl = document.getElementById(hash);
+      if (targetEl) {
+        setTimeout(() => {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }
+
+  // Run on initial load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar);
+  } else {
+    initSidebar();
+  }
+
+  // Re-run after Astro page transitions
+  document.addEventListener('astro:page-load', initSidebar);
+</script>
 
 <style>
   .sidebar {
@@ -144,9 +297,10 @@ function isActive(link: string): boolean {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.15rem;
   }
 
+  /* Topic link */
   .sidebar-link {
     display: flex;
     align-items: center;
@@ -158,6 +312,11 @@ function isActive(link: string): boolean {
     font-size: 0.875rem;
     transition: all 0.2s ease;
     position: relative;
+    cursor: pointer;
+  }
+
+  .sidebar-link .link-text {
+    flex: 1;
   }
 
   .sidebar-link:hover {
@@ -190,6 +349,84 @@ function isActive(link: string): boolean {
     box-shadow: 0 0 10px var(--color-ember-core);
   }
 
+  /* Expand arrow */
+  .expand-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .expand-arrow.rotated {
+    transform: rotate(180deg);
+    opacity: 1;
+  }
+
+  .sidebar-link.active .expand-arrow {
+    opacity: 1;
+    color: var(--color-ember-light);
+  }
+
+  /* Sub-topics */
+  .sub-topics {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+    opacity: 0;
+    padding-left: 1.25rem;
+    margin-left: 0.75rem;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .sub-topics.expanded {
+    opacity: 1;
+  }
+
+  .sub-topic-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    color: var(--color-muted-text);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .sub-topic-link:hover {
+    background: var(--color-surface);
+    color: var(--color-primary-text);
+  }
+
+  .sub-topic-link.active {
+    color: var(--color-ember-light);
+    background: rgba(255, 69, 0, 0.08);
+  }
+
+  .sub-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-border);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .sub-topic-link:hover .sub-indicator {
+    background: var(--color-ember-core);
+  }
+
+  .sub-topic-link.active .sub-indicator {
+    background: var(--color-ember-core);
+    box-shadow: 0 0 6px var(--color-ember-core);
+  }
+
+  /* Footer */
   .sidebar-footer {
     margin-top: auto;
     padding-top: 1rem;
