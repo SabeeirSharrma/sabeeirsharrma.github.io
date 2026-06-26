@@ -33,8 +33,6 @@ safe_versions = []
 urls = ["https://thecinderproject.qd.je/advisories/malicious-pkg-2026-06-14"]
 ```
 
-See [advisories/schema.md](../advisories/schema.md) for full field specification.
-
 ## Submission
 
 Community members report via GitHub issue or Discord. Core team reviews evidence and publishes. No automated advisory submissions.
