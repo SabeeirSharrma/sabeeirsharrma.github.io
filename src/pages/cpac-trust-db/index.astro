@@ -7,8 +7,8 @@ import MainLayout from '../../layouts/MainLayout.astro';
     
     <!-- Header -->
     <header class="mb-16 border-b border-border pb-8">
-      <h1 class="text-5xl md:text-6xl font-heading text-white mb-4 uppercase tracking-widest anim-slide-up">CPAC</h1>
-      <p class="text-2xl text-ember-core font-heading tracking-wide anim-slide-up delay-2">A package trust layer for Arch-based Linux Distros.</p>
+      <h1 class="text-5xl md:text-6xl font-heading text-white mb-4 uppercase tracking-widest anim-slide-up">CPAC Trust DB</h1>
+      <p class="text-2xl text-ember-core font-heading tracking-wide anim-slide-up delay-2">Community-maintained trust data for <a href="/cpac">CPAC</a></p>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -21,15 +21,13 @@ import MainLayout from '../../layouts/MainLayout.astro';
           <h2 class="text-2xl font-heading text-white mb-4 uppercase tracking-widest heading-line">Overview</h2>
           <div class="prose prose-invert prose-cinder">
             <p>
-              CPAC is a package trust layer for Arch-based Linux distributions. 
-              It analyzes packages from both official repositories and the AUR, providing
-              detailed trust scores and security analysis before you install anything.
+            cpac-trust-db is the trust data backend for CPAC. It stores two categories of data:
+            <ol>
+                <li>PKGBUILD snapshots — anonymized, crowdsourced snapshots submitted by CPAC clients, used to detect divergence from known-good package states</li>
+                <li> Maintainer-curated records of known malicious, compromised, or suspicious packages (e.g. Atomic Arch-style hijacks)</li>
+            </ol>
             </p>
-            <p>
-              CPAC checks community consensus, detects suspicious PKGBUILD patterns,
-              and integrates with the cpac-trust-db for known advisories.
           </div>
-          <p class="text-xs text-muted-text mt-2">Builds from source, installs to /usr/local/bin. No leftover dependencies. How to install: <a href="/cpac/docs">Documentation</a></p>
         </section>
 
         <!-- Current Status -->
@@ -52,11 +50,11 @@ import MainLayout from '../../layouts/MainLayout.astro';
           <ul class="space-y-4">
             <li class="border-l-2 border-cinder-mid pl-4 py-1">
               <span class="text-sm text-ember-light font-bold mb-1 block">June 2026</span>
-              <p class="text-muted-text">v0.6.0: Trust DB integration, advisory system, pre-flight checks, Pass 2 anomaly detection.</p>
+              <p class="text-muted-text">Initial routing and documentation structure established.</p>
             </li>
             <li class="border-l-2 border-cinder-mid pl-4 py-1">
-              <span class="text-sm text-ember-light font-bold mb-1 block">June 2026</span>
-              <p class="text-muted-text">cpac-trust-db launched with Atomic Arch advisory entries.</p>
+              <span class="text-sm text-ember-light font-bold mb-1 block">May 2026</span>
+              <p class="text-muted-text">Core dependency resolution algorithm prototype completed.</p>
             </li>
           </ul>
         </section>
@@ -71,18 +69,13 @@ import MainLayout from '../../layouts/MainLayout.astro';
           <h3 class="text-xl font-heading text-white mb-4 uppercase tracking-widest">Quick Links</h3>
           <ul class="space-y-3">
             <li>
-              <a href="/cpac/docs" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
+              <a href="/cpac-trust-db/docs" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
                 <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Documentation
               </a>
             </li>
             <li>
-              <a href="https://github.com/SabeeirSharrma/cpac" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
+              <a href="https://github.com/SabeeirSharrma/cpac-trust-db" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
                 <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Source Code
-              </a>
-            </li>
-            <li>
-              <a href="https://github.com/SabeeirSharrma/cpac/releases" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
-                <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Releases
               </a>
             </li>
           </ul>
