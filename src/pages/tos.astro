@@ -3,7 +3,7 @@ import MainLayout from '../layouts/MainLayout.astro';
 import { getCollection, render } from 'astro:content';
 
 const allDocs = await getCollection('docs');
-const tosDoc = allDocs.find(doc => doc.id === 'TOS');
+const tosDoc = allDocs.find(doc => doc.id === 'tos');
 if (!tosDoc) throw new Error('TOS doc not found');
 
 const { Content } = await render(tosDoc);

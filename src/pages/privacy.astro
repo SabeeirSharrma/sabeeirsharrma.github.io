@@ -3,7 +3,7 @@ import MainLayout from '../layouts/MainLayout.astro';
 import { getCollection, render } from 'astro:content';
 
 const allDocs = await getCollection('docs');
-const privacyDoc = allDocs.find(doc => doc.id === 'PrivacyPolicy');
+const privacyDoc = allDocs.find(doc => doc.id === 'privacy');
 if (!privacyDoc) throw new Error('Privacy doc not found');
 
 const { Content } = await render(privacyDoc);
