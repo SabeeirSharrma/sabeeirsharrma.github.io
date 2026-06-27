@@ -1,0 +1,558 @@
+---
+import MainLayout from '../../../../../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Volunteer Panel" description="CPAC Trust DB — Volunteer Advisory Submission">
+  <div class="container mx-auto px-4 py-16 max-w-5xl">
+
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="text-center py-20">
+      <p class="text-muted-text">Checking access...</p>
+    </div>
+
+    <!-- Dashboard (hidden until auth) -->
+    <div id="dashboard" class="hidden">
+
+      <!-- Header -->
+      <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-heading text-white uppercase tracking-widest">Volunteer Panel</h1>
+          <p class="text-muted-text text-sm mt-1">Submit advisories for review</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-xs text-muted-text">Submissions today</div>
+            <div class="text-lg font-heading text-ember-core" id="daily-count">0/5</div>
+          </div>
+          <button id="logoutBtn" class="text-xs text-muted-text hover:text-ember-core border border-border rounded-lg px-3 py-2 cursor-pointer transition-colors bg-surface">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-8 border-b border-border">
+        <button id="tab-comparer" class="tab-btn active" onclick="showTab('comparer')">Comparer</button>
+        <button id="tab-submit" class="tab-btn" onclick="showTab('submit')">Submit Advisory</button>
+        <button id="tab-mysubmissions" class="tab-btn" onclick="showTab('mysubmissions')">My Submissions</button>
+      </div>
+
+      <!--Comparer Tab -->
+      <div id="panel-comparer" class="tab-panel">
+        <div class="bg-surface border border-border rounded-xl p-6 mb-6">
+          <h2 class="text-lg font-heading text-white mb-4 uppercase tracking-widest">Package Comparer</h2>
+          <p class="text-sm text-muted-text mb-4">Enter a package name to fetch its PKGBUILD from the AUR and compare against the trust database.</p>
+          <div class="flex gap-3">
+            <input type="text" id="comparePkg" placeholder="e.g. firefox, snapd-git"
+              class="flex-1 bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            <button id="compareBtn" class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
+              Compare
+            </button>
+          </div>
+        </div>
+
+        <div id="compare-loading" class="hidden text-center py-8 text-muted-text">Fetching package data...</div>
+        <div id="compare-error" class="hidden bg-red-900/20 border border-red-800 rounded-xl p-4 text-red-400 text-sm mb-6"></div>
+        <div id="compare-result" class="hidden"></div>
+      </div>
+
+      <!-- Submit Tab -->
+      <div id="panel-submit" class="tab-panel hidden">
+        <form id="submitForm" class="bg-surface border border-border rounded-xl p-6 space-y-4">
+          <h2 class="text-lg font-heading text-white mb-2 uppercase tracking-widest">Submit Advisory</h2>
+          <p class="text-sm text-muted-text mb-4">Fill in the details below. Fields marked with * are required.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Package Name *</label>
+              <input type="text" id="f-package" required
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">CVE ID</label>
+              <input type="text" id="f-cve" placeholder="CVE-YYYY-NNNNN"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Severity *</label>
+              <select id="f-severity" required
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Status *</label>
+              <select id="f-status" required
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
+                <option value="suspected" selected>Suspected</option>
+                <option value="confirmed">Confirmed</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Summary *</label>
+            <input type="text" id="f-summary" required placeholder="Brief one-line description"
+              class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Description</label>
+            <textarea id="f-description" rows="3" placeholder="Detailed explanation of the issue"
+              class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors resize-y"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Affected Versions</label>
+              <input type="text" id="f-affected" placeholder="1.0, 1.1, 1.2 (comma-separated)"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Safe Versions</label>
+              <input type="text" id="f-safe" placeholder="1.3, 1.4 (comma-separated)"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Reference URLs</label>
+              <input type="text" id="f-urls" placeholder="https://... (comma-separated)"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+          </div>
+
+          <div id="submit-error" class="hidden text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-4 py-2"></div>
+          <div id="submit-success" class="hidden text-sm text-green-400 bg-green-900/20 border border-green-800 rounded-lg px-4 py-2"></div>
+
+          <button type="submit" id="submitBtn"
+            class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer">
+            Submit for Review
+          </button>
+        </form>
+      </div>
+
+      <!-- My Submissions Tab -->
+      <div id="panel-mysubmissions" class="tab-panel hidden">
+        <div id="subs-loading" class="text-center py-8 text-muted-text">Loading submissions...</div>
+        <div id="subs-empty" class="hidden text-center py-8">
+          <p class="text-muted-text">No submissions yet.</p>
+        </div>
+        <div id="subs-list" class="space-y-3"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.875rem;
+      color: var(--color-muted-text);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: none;
+      border-top: none; border-left: none; border-right: none;
+    }
+    .tab-btn:hover { color: var(--color-ember-light); }
+    .tab-btn.active { color: var(--color-ember-core); border-bottom-color: var(--color-ember-core); }
+    .verdict-badge {
+      display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .verdict-clean { background: #14532d; color: #86efac; }
+    .verdict-advisory { background: #7f1d1d; color: #fca5a5; }
+    .verdict-divergent { background: #7f1d1d; color: #fca5a5; }
+    .verdict-outdated { background: #713f12; color: #fde68a; }
+    .verdict-unknown { background: #1e3a5f; color: #93c5fd; }
+    .verdict-mixed { background: #713f12; color: #fde68a; }
+    .sub-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 0.5rem; padding: 1rem 1.25rem;
+    }
+    .review-badge {
+      display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .review-pending { background: #713f12; color: #fde68a; }
+    .review-approved { background: #14532d; color: #86efac; }
+    .review-rejected { background: #7f1d1d; color: #fca5a5; }
+  </style>
+
+  <script is:inline>
+    (function() {
+      var SUPABASE_URL = 'https://qzhhsyucnlswmsvpssdh.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
+      var supabase = null;
+      var currentUser = null;
+      var userProfile = null;
+
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      script.onload = init;
+      document.head.appendChild(script);
+
+      function init() {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        checkAuth();
+      }
+
+      function checkAuth() {
+        supabase.auth.getSession().then(function(result) {
+          if (!result.data.session) {
+            window.location.href = '/cpac-trust-db/web/panel/login/';
+            return;
+          }
+          currentUser = result.data.session.user;
+          loadProfile();
+        });
+      }
+
+      function loadProfile() {
+        fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + currentUser.id + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (!data || data.length === 0 || data[0].role !== 'volunteer') {
+            window.location.href = '/cpac-trust-db/web/panel/login/';
+            return;
+          }
+          userProfile = data[0];
+          document.getElementById('auth-gate').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+          loadDailyCount();
+          loadSubmissions();
+        }).catch(function() {
+          window.location.href = '/cpac-trust-db/web/panel/login/';
+        });
+      }
+
+      function authHeaders() {
+        return {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + currentUser.id,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        };
+      }
+
+      function anonHeaders() {
+        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+      }
+
+      // ── Daily count ──
+      function loadDailyCount() {
+        var today = new Date().toISOString().split('T')[0];
+        fetch(SUPABASE_URL + '/rest/v1/daily_submission_counts?submitted_by=eq.' + currentUser.id + '&day=eq.' + today + '&select=count', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          var count = (data && data.length > 0) ? data[0].count : 0;
+          document.getElementById('daily-count').textContent = count + '/5';
+        });
+      }
+
+      // ── Tabs ──
+      window.showTab = function(name) {
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.add('hidden'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('panel-' + name).classList.remove('hidden');
+        document.getElementById('tab-' + name).classList.add('active');
+      };
+
+      // ──Comparer ──
+      document.getElementById('compareBtn').addEventListener('click', runCompare);
+      document.getElementById('comparePkg').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); runCompare(); }
+      });
+
+      async function sha256(text) {
+        var encoder = new TextEncoder();
+        var data = encoder.encode(text);
+        var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        var hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+      }
+
+      async function runCompare() {
+        var pkg = document.getElementById('comparePkg').value.trim();
+        if (!pkg) return;
+
+        var loading = document.getElementById('compare-loading');
+        var error = document.getElementById('compare-error');
+        var result = document.getElementById('compare-result');
+
+        loading.classList.remove('hidden');
+        error.classList.add('hidden');
+        result.classList.add('hidden');
+
+        try {
+          // 1. Fetch PKGBUILD from AUR
+          var aurRes = await fetch('https://aur.archlinux.org/rpc/v5/info/' + pkg);
+          var aurData = await aurRes.json();
+
+          if (aurData.resultcount === 0) {
+            error.textContent = 'Package not found on AUR: ' + pkg;
+            error.classList.remove('hidden');
+            loading.classList.add('hidden');
+            return;
+          }
+
+          var pkgInfo = aurData.results[0];
+          var pkgbuildUrl = 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=' + pkg;
+          var pkgbuildRes = await fetch(pkgbuildUrl);
+          var pkgbuildText = await pkgbuildRes.text();
+          var pkgHash = await sha256(pkgbuildText);
+
+          // 2. Fetch trust DB data
+          var [snapRes, advRes] = await Promise.all([
+            fetch(SUPABASE_URL + '/rest/v1/snapshots?select=*&package=eq.' + pkg, { headers: anonHeaders() }),
+            fetch(SUPABASE_URL + '/rest/v1/advisories?select=*&package=eq.' + pkg, { headers: anonHeaders() })
+          ]);
+          var snapshots = await snapRes.json();
+          var advisories = await advRes.json();
+
+          // 3. Run comparison logic
+          var report = computeReport(pkg, pkgInfo, pkgHash, snapshots, advisories);
+
+          // 4. Render result
+          renderCompareResult(report, pkgInfo);
+          loading.classList.add('hidden');
+        } catch (e) {
+          error.textContent = 'Error: ' + (e.message || 'Failed to fetch package data');
+          error.classList.remove('hidden');
+          loading.classList.add('hidden');
+        }
+      }
+
+      function computeReport(pkg, pkgInfo, pkgHash, snapshots, advisories) {
+        var version = pkgInfo.Version;
+        var advisory = advisories.length > 0 ? advisories[0] : null;
+
+        // Version intelligence
+        var knownVersions = [...new Set(snapshots.map(function(s) { return s.version; }))].sort();
+        var latestKnown = knownVersions.length > 0 ? knownVersions[knownVersions.length - 1] : null;
+        var isLatest = latestKnown === version;
+        var isOutdated = latestKnown !== null && version !== latestKnown;
+        var isUnknownVersion = knownVersions.indexOf(version) === -1;
+
+        // Hash intelligence
+        var versionSnaps = snapshots.filter(function(s) { return s.version === version; });
+        var totalSubs = versionSnaps.reduce(function(sum, s) { return sum + s.submitted_count; }, 0);
+        var majority = versionSnaps.length > 0
+          ? versionSnaps.reduce(function(max, s) { return s.submitted_count > max.submitted_count ? s : max; })
+          : null;
+        var majorityHash = majority ? majority.sha256 : '';
+        var majoritySubs = majority ? majority.submitted_count : 0;
+        var matchesConsensus = majorityHash === pkgHash;
+        var hashKnown = versionSnaps.some(function(s) { return s.sha256 === pkgHash; });
+        var hashSubs = versionSnaps.filter(function(s) { return s.sha256 === pkgHash; })
+          .reduce(function(sum, s) { return sum + s.submitted_count; }, 0);
+
+        // Advisory check
+        var affectedVersions = advisory ? (advisory.affected_versions || []) : [];
+        var safeVersions = advisory ? (advisory.safe_versions || []) : [];
+        var versionAffected = affectedVersions.indexOf(version) !== -1;
+        var versionSafe = safeVersions.indexOf(version) !== -1;
+
+        // Verdict
+        var concerns = [];
+        var adjustments = [];
+
+        if (versionAffected && advisory) {
+          var penalty = { critical: -30, high: -20, medium: -10, low: -5 }[advisory.severity] || 0;
+          adjustments.push(penalty);
+          concerns.push('Version ' + version + ' affected by ' + advisory.severity + ' advisory: ' + advisory.summary);
+        } else if (versionSafe) {
+          adjustments.push(10);
+        }
+
+        if (totalSubs > 0) {
+          if (matchesConsensus) {
+            adjustments.push(totalSubs >= 5 ? 5 : 2);
+          } else {
+            adjustments.push(-15);
+            concerns.push(hashKnown
+              ? 'Your hash has ' + hashSubs + ' submissions, majority has ' + majoritySubs
+              : 'Your PKGBUILD hash is not in any known snapshots');
+          }
+        }
+
+        if (isOutdated) {
+          adjustments.push(-5);
+          concerns.push('Newer version is known in the trust DB');
+        }
+
+        var advisoryConcern = versionAffected;
+        var consensusConcern = totalSubs > 0 && !matchesConsensus;
+        var outdatedConcern = isOutdated;
+        var unknownConcern = isUnknownVersion && totalSubs === 0;
+
+        var verdict;
+        if (advisoryConcern) verdict = 'advisory';
+        else if (consensusConcern) verdict = 'divergent';
+        else if (outdatedConcern) verdict = 'outdated';
+        else if (unknownConcern) verdict = 'unknown';
+        else verdict = 'clean';
+
+        var totalAdj = adjustments.reduce(function(a, b) { return a + b; }, 0);
+
+        var explanation;
+        if (concerns.length > 0) {
+          explanation = concerns.join('; ');
+        } else if (totalSubs === 0) {
+          explanation = 'No community data yet for ' + pkg + ' ' + version + ' — first submission';
+        } else if (matchesConsensus) {
+          explanation = 'Matches community consensus (' + hashSubs + ' submissions for this hash)';
+        } else {
+          explanation = 'Version ' + version + ' — no concerns detected';
+        }
+
+        return {
+          package: pkg, version: version, hash: pkgHash, pkgbuildText: pkgbuildText,
+          latestKnown: latestKnown, knownVersions: knownVersions, isLatest: isLatest,
+          isOutdated: isOutdated, isUnknownVersion: isUnknownVersion,
+          hashKnown: hashKnown, hashSubs: hashSubs, matchesConsensus: matchesConsensus,
+          majorityHash: majorityHash, majoritySubs: majoritySubs, totalSubs: totalSubs,
+          advisory: advisory, versionAffected: versionAffected, versionSafe: versionSafe,
+          verdict: verdict, scoreAdjustment: totalAdj, explanation: explanation
+        };
+      }
+
+      function renderCompareResult(r, pkgInfo) {
+        var verdictColors = { clean: 'verdict-clean', advisory: 'verdict-advisory', divergent: 'verdict-divergent', outdated: 'verdict-outdated', unknown: 'verdict-unknown' };
+        var adjColor = r.scoreAdjustment >= 0 ? 'text-green-400' : 'text-red-400';
+        var adjSign = r.scoreAdjustment >= 0 ? '+' : '';
+
+        var html = '<div class="bg-surface border border-border rounded-xl p-6">'
+          + '<div class="flex flex-wrap items-center gap-3 mb-4">'
+          + '<h3 class="text-xl font-heading text-white">' + r.package + '</h3>'
+          + '<span class="verdict-badge ' + (verdictColors[r.verdict] || 'verdict-unknown') + '">' + r.verdict.toUpperCase() + '</span>'
+          + '</div>'
+
+          + '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">'
+          + '<div><span class="text-muted-text">Version:</span> <span class="text-white">' + r.version + '</span></div>'
+          + '<div><span class="text-muted-text">Maintainer:</span> <span class="text-white">' + (pkgInfo.Maintainer || 'N/A') + '</span></div>'
+          + '<div><span class="text-muted-text">Hash:</span> <span class="text-white font-mono text-xs">' + r.hash.substring(0, 16) + '...</span></div>'
+          + '<div><span class="text-muted-text">Adjustment:</span> <span class="' + adjColor + ' font-bold">' + adjSign + r.scoreAdjustment + '</span></div>'
+          + '</div>'
+
+          + '<div class="text-sm text-muted-text mb-4">' + r.explanation + '</div>';
+
+        if (r.advisory) {
+          html += '<div class="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm mb-4">'
+            + '<span class="text-red-400 font-bold">Active Advisory:</span> <span class="text-white">' + r.advisory.severity.toUpperCase() + '</span> — '
+            + r.advisory.summary
+            + '</div>';
+        }
+
+        html += '<button onclick="fillFromCompare(\'' + r.package + '\',\'' + r.version + '\',\'' + (r.advisory ? r.advisory.severity : 'medium') + '\',\'' + (r.advisory ? r.advisory.status : 'suspected') + '\')" '
+          + 'class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer">'
+          + 'Submit as Advisory</button>';
+
+        html += '</div>';
+        document.getElementById('compare-result').innerHTML = html;
+        document.getElementById('compare-result').classList.remove('hidden');
+      }
+
+      window.fillFromCompare = function(pkg, version, severity, status) {
+        document.getElementById('f-package').value = pkg;
+        document.getElementById('f-severity').value = severity;
+        document.getElementById('f-status').value = status;
+        document.getElementById('f-summary').value = 'Suspicious activity detected for ' + pkg + ' ' + version;
+        showTab('submit');
+      };
+
+      // ── Submit form ──
+      document.getElementById('submitForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var errorEl = document.getElementById('submit-error');
+        var successEl = document.getElementById('submit-success');
+        var btn = document.getElementById('submitBtn');
+
+        errorEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+        btn.textContent = 'Submitting...';
+        btn.disabled = true;
+
+        var commaSplit = function(v) { return v ? v.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : []; };
+
+        var body = {
+          submitted_by: currentUser.id,
+          package: document.getElementById('f-package').value.trim(),
+          severity: document.getElementById('f-severity').value,
+          status: document.getElementById('f-status').value,
+          summary: document.getElementById('f-summary').value.trim(),
+          description: document.getElementById('f-description').value.trim(),
+          affected_versions: JSON.stringify(commaSplit(document.getElementById('f-affected').value)),
+          safe_versions: JSON.stringify(commaSplit(document.getElementById('f-safe').value)),
+          reference_urls: JSON.stringify(commaSplit(document.getElementById('f-urls').value)),
+          cve: document.getElementById('f-cve').value.trim()
+        };
+
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/pending_advisories', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(body)
+          });
+          var data = await res.json();
+
+          if (res.ok) {
+            successEl.textContent = 'Advisory submitted for review. A maintainer will review it shortly.';
+            successEl.classList.remove('hidden');
+            document.getElementById('submitForm').reset();
+            loadDailyCount();
+            loadSubmissions();
+          } else {
+            errorEl.textContent = (data.message || data.error || 'Submission failed. You may have reached your daily limit.');
+            errorEl.classList.remove('hidden');
+          }
+        } catch (err) {
+          errorEl.textContent = 'Network error: ' + err.message;
+          errorEl.classList.remove('hidden');
+        }
+
+        btn.textContent = 'Submit for Review';
+        btn.disabled = false;
+      });
+
+      // ── My Submissions ──
+      function loadSubmissions() {
+        fetch(SUPABASE_URL + '/rest/v1/pending_advisories?select=*&submitted_by=eq.' + currentUser.id + '&order=created_at.desc', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('subs-loading').classList.add('hidden');
+          if (!data || data.length === 0) {
+            document.getElementById('subs-empty').classList.remove('hidden');
+            return;
+          }
+          var html = data.map(function(s) {
+            return '<div class="sub-card">'
+              + '<div class="flex flex-wrap items-center gap-2 mb-2">'
+              + '<span class="text-white font-bold">' + s.package + '</span>'
+              + '<span class="review-badge review-' + s.review_status + '">' + s.review_status + '</span>'
+              + '<span class="severity-badge severity-' + s.severity + '" style="font-size:0.65rem">' + s.severity + '</span>'
+              + '</div>'
+              + '<p class="text-sm text-muted-text">' + s.summary + '</p>'
+              + (s.review_notes ? '<p class="text-xs text-ember-light mt-1">Reviewer: ' + s.review_notes + '</p>' : '')
+              + '<div class="text-xs text-muted-text mt-1">' + new Date(s.created_at).toLocaleDateString() + '</div>'
+              + '</div>';
+          }).join('');
+          document.getElementById('subs-list').innerHTML = html;
+        });
+      }
+
+      // ── Logout ──
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        supabase.auth.signOut().then(function() {
+          window.location.href = '/cpac-trust-db/web/panel/login/';
+        });
+      });
+    })();
+  </script>
+</MainLayout>

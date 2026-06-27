@@ -1,0 +1,113 @@
+---
+import MainLayout from '../../../../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Panel Login" description="Login to the CPAC Trust DB panel.">
+  <div class="container mx-auto px-4 py-16 max-w-md">
+
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-heading text-white mb-2 uppercase tracking-widest">Panel Login</h1>
+      <p class="text-muted-text text-sm">CPAC Trust DB — Maintainer &amp; Volunteer Access</p>
+    </header>
+
+    <div class="bg-surface border border-border rounded-xl p-6">
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-2">Email</label>
+          <input type="email" id="email" required
+            class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors"
+            placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-2">Password</label>
+          <input type="password" id="password" required
+            class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors"
+            placeholder="••••••••" />
+        </div>
+        <div id="error" class="hidden text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-4 py-2"></div>
+        <button type="submit" id="loginBtn"
+          class="w-full bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm py-3 rounded-lg transition-colors cursor-pointer">
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-border text-center">
+        <p class="text-xs text-muted-text">
+          Don't have access? Request it via
+          <a href="https://discord.com/invite/3ZMtEgJjFT" target="_blank" rel="noopener noreferrer"
+            class="text-ember-light hover:text-ember-core transition-colors">Discord</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script is:inline>
+    (function() {
+      var SUPABASE_URL = 'https://qzhhsyucnlswmsvpssdh.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
+
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      script.onload = init;
+      document.head.appendChild(script);
+
+      function init() {
+        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // If already logged in, redirect
+        supabase.auth.getSession().then(function(result) {
+          if (result.data.session) {
+            redirectByRole(result.data.session.user.id);
+          }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          var email = document.getElementById('email').value;
+          var password = document.getElementById('password').value;
+          var errorEl = document.getElementById('error');
+          var btn = document.getElementById('loginBtn');
+
+          errorEl.classList.add('hidden');
+          btn.textContent = 'Signing in...';
+          btn.disabled = true;
+
+          supabase.auth.signInWithPassword({ email: email, password: password })
+            .then(function(result) {
+              if (result.error) {
+                errorEl.textContent = result.error.message;
+                errorEl.classList.remove('hidden');
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+                return;
+              }
+              redirectByRole(result.data.user.id);
+            })
+            .catch(function(err) {
+              errorEl.textContent = err.message || 'Login failed';
+              errorEl.classList.remove('hidden');
+              btn.textContent = 'Sign In';
+              btn.disabled = false;
+            });
+        });
+
+        function redirectByRole(userId) {
+          var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+          fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId + '&select=role', { headers: headers })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.length > 0 && data[0].role === 'maintainer') {
+                window.location.href = '/cpac-trust-db/web/panel/maintainer/';
+              } else {
+                window.location.href = '/cpac-trust-db/web/panel/volunteer/';
+              }
+            })
+            .catch(function() {
+              window.location.href = '/cpac-trust-db/web/panel/volunteer/';
+            });
+        }
+      }
+    })();
+  </script>
+</MainLayout>

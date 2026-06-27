@@ -1,0 +1,310 @@
+---
+import MainLayout from '../../../../../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Maintainer Panel" description="CPAC Trust DB — Maintainer Advisory Review">
+  <div class="container mx-auto px-4 py-16 max-w-6xl">
+
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="text-center py-20">
+      <p class="text-muted-text">Checking access...</p>
+    </div>
+
+    <!-- Dashboard (hidden until auth) -->
+    <div id="dashboard" class="hidden">
+
+      <!-- Header -->
+      <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-heading text-white uppercase tracking-widest">Maintainer Panel</h1>
+          <p class="text-muted-text text-sm mt-1">Review and approve volunteer advisories</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-xs text-muted-text">Pending review</div>
+            <div class="text-lg font-heading text-ember-core" id="pending-count">0</div>
+          </div>
+          <button id="logoutBtn" class="text-xs text-muted-text hover:text-ember-core border border-border rounded-lg px-3 py-2 cursor-pointer transition-colors bg-surface">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-8 border-b border-border">
+        <button id="tab-pending" class="tab-btn active" onclick="showTab('pending')">Pending Review</button>
+        <button id="tab-published" class="tab-btn" onclick="showTab('published')">Published</button>
+        <button id="tab-stats" class="tab-btn" onclick="showTab('stats')">Stats</button>
+      </div>
+
+      <!-- Pending Tab -->
+      <div id="panel-pending" class="tab-panel">
+        <div id="pending-loading" class="text-center py-8 text-muted-text">Loading pending submissions...</div>
+        <div id="pending-empty" class="hidden text-center py-8">
+          <div class="text-5xl mb-3 opacity-30">✓</div>
+          <p class="text-muted-text">No pending submissions</p>
+        </div>
+        <div id="pending-list" class="space-y-4"></div>
+      </div>
+
+      <!-- Published Tab -->
+      <div id="panel-published" class="tab-panel hidden">
+        <div id="published-loading" class="text-center py-8 text-muted-text">Loading published advisories...</div>
+        <div id="published-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Stats Tab -->
+      <div id="panel-stats" class="tab-panel hidden">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-total">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Published</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-pending">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Pending</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-approved">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Approved Today</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-rejected">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Rejected Today</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    .tab-btn {
+      padding: 0.75rem 1.5rem; font-family: var(--font-heading); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem;
+      color: var(--color-muted-text); border-bottom: 2px solid transparent;
+      transition: all 0.2s; cursor: pointer; background: none;
+      border-top: none; border-left: none; border-right: none;
+    }
+    .tab-btn:hover { color: var(--color-ember-light); }
+    .tab-btn.active { color: var(--color-ember-core); border-bottom-color: var(--color-ember-core); }
+    .pending-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 0.5rem; padding: 1.25rem; transition: border-color 0.2s;
+    }
+    .pending-card:hover { border-color: var(--color-cinder-mid); }
+    .severity-badge, .status-badge, .review-badge {
+      display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .severity-critical { background: #7f1d1d; color: #fca5a5; }
+    .severity-high { background: #92400e; color: #fcd34d; }
+    .severity-medium { background: #713f12; color: #fde68a; }
+    .severity-low { background: #1e3a5f; color: #93c5fd; }
+    .status-confirmed { background: #7f1d1d; color: #fca5a5; }
+    .status-suspected { background: #713f12; color: #fde68a; }
+    .review-pending { background: #713f12; color: #fde68a; }
+    .review-approved { background: #14532d; color: #86efac; }
+    .review-rejected { background: #7f1d1d; color: #fca5a5; }
+    .action-btn {
+      font-family: var(--font-heading); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; font-size: 0.75rem; padding: 0.5rem 1rem;
+      border-radius: 0.5rem; cursor: pointer; transition: all 0.15s; border: none;
+    }
+  </style>
+
+  <script is:inline>
+    (function() {
+      var SUPABASE_URL = 'https://qzhhsyucnlswmsvpssdh.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
+      var supabase = null;
+      var currentUser = null;
+
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      script.onload = init;
+      document.head.appendChild(script);
+
+      function init() {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        checkAuth();
+      }
+
+      function checkAuth() {
+        supabase.auth.getSession().then(function(result) {
+          if (!result.data.session) { window.location.href = '/cpac-trust-db/web/panel/login/'; return; }
+          currentUser = result.data.session.user;
+          loadProfile();
+        });
+      }
+
+      function loadProfile() {
+        fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + currentUser.id + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (!data || data.length === 0 || data[0].role !== 'maintainer') {
+            window.location.href = '/cpac-trust-db/web/panel/login/';
+            return;
+          }
+          document.getElementById('auth-gate').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+          loadPending();
+          loadPublished();
+          loadStats();
+        }).catch(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
+      }
+
+      function anonHeaders() {
+        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+      }
+
+      function authHeaders() {
+        return {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        };
+      }
+
+      window.showTab = function(name) {
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.add('hidden'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('panel-' + name).classList.remove('hidden');
+        document.getElementById('tab-' + name).classList.add('active');
+      };
+
+      // ── Load pending ──
+      function loadPending() {
+        fetch(SUPABASE_URL + '/rest/v1/pending_advisories?select=*,profiles:submitted_by(display_name)&review_status=eq.pending&order=created_at.asc', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('pending-loading').classList.add('hidden');
+          document.getElementById('pending-count').textContent = data.length;
+
+          if (data.length === 0) {
+            document.getElementById('pending-empty').classList.remove('hidden');
+            return;
+          }
+
+          var html = data.map(function(s) {
+            var submitter = s.profiles ? s.profiles.display_name : 'Unknown';
+            return '<div class="pending-card" id="pending-' + s.id + '">'
+              + '<div class="flex flex-wrap items-center gap-2 mb-2">'
+              + '<h3 class="text-lg font-heading text-white">' + s.package + '</h3>'
+              + '<span class="severity-badge severity-' + s.severity + '">' + s.severity + '</span>'
+              + '<span class="status-badge status-' + s.status + '">' + s.status + '</span>'
+              + '<span class="text-xs text-muted-text ml-auto">by ' + submitter + ' — ' + new Date(s.created_at).toLocaleDateString() + '</span>'
+              + '</div>'
+              + '<p class="text-sm text-muted-text mb-3">' + s.summary + '</p>'
+              + (s.description ? '<p class="text-xs text-muted-text mb-3 whitespace-pre-line">' + s.description + '</p>' : '')
+              + (s.cve ? '<div class="text-xs text-muted-text mb-2">CVE: <span class="text-white">' + s.cve + '</span></div>' : '')
+              + (s.affected_versions && JSON.parse(s.affected_versions).length > 0
+                ? '<div class="text-xs text-muted-text mb-1">Affected: <span class="text-white">' + JSON.parse(s.affected_versions).join(', ') + '</span></div>' : '')
+              + (s.safe_versions && JSON.parse(s.safe_versions).length > 0
+                ? '<div class="text-xs text-muted-text mb-2">Safe: <span class="text-white">' + JSON.parse(s.safe_versions).join(', ') + '</span></div>' : '')
+              + '<div class="flex gap-2 mt-3">'
+              + '<button onclick="approveAdvisory(\'' + s.id + '\')" class="action-btn bg-green-800 hover:bg-green-700 text-green-100">Approve</button>'
+              + '<button onclick="rejectAdvisory(\'' + s.id + '\')" class="action-btn bg-red-800 hover:bg-red-700 text-red-100">Reject</button>'
+              + '</div>'
+              + '<div id="action-msg-' + s.id + '" class="hidden text-xs mt-2"></div>'
+              + '</div>';
+          }).join('');
+          document.getElementById('pending-list').innerHTML = html;
+        });
+      }
+
+      window.approveAdvisory = async function(id) {
+        var msgEl = document.getElementById('action-msg-' + id);
+        msgEl.className = 'text-xs mt-2 text-green-400';
+        msgEl.textContent = 'Approving...';
+
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/rpc/approve_advisory', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ p_pending_id: id, p_reviewed_by: currentUser.id, p_review_notes: '' })
+          });
+
+          if (res.ok) {
+            msgEl.textContent = 'Approved and published!';
+            setTimeout(function() { loadPending(); loadPublished(); loadStats(); }, 1000);
+          } else {
+            var err = await res.text();
+            msgEl.className = 'text-xs mt-2 text-red-400';
+            msgEl.textContent = 'Error: ' + err;
+          }
+        } catch (e) {
+          msgEl.className = 'text-xs mt-2 text-red-400';
+          msgEl.textContent = 'Network error: ' + e.message;
+        }
+      };
+
+      window.rejectAdvisory = async function(id) {
+        var notes = prompt('Rejection reason (optional):');
+        var msgEl = document.getElementById('action-msg-' + id);
+        msgEl.className = 'text-xs mt-2 text-yellow-400';
+        msgEl.textContent = 'Rejecting...';
+
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/rpc/reject_advisory', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ p_pending_id: id, p_reviewed_by: currentUser.id, p_review_notes: notes || '' })
+          });
+
+          if (res.ok) {
+            msgEl.textContent = 'Rejected.';
+            setTimeout(function() { loadPending(); loadStats(); }, 1000);
+          } else {
+            var err = await res.text();
+            msgEl.className = 'text-xs mt-2 text-red-400';
+            msgEl.textContent = 'Error: ' + err;
+          }
+        } catch (e) {
+          msgEl.className = 'text-xs mt-2 text-red-400';
+          msgEl.textContent = 'Network error: ' + e.message;
+        }
+      };
+
+      // ── Load published ──
+      function loadPublished() {
+        fetch(SUPABASE_URL + '/rest/v1/advisories?select=*&order=reported.desc', { headers: anonHeaders() })
+          .then(function(r) { return r.json(); }).then(function(data) {
+            document.getElementById('published-loading').classList.add('hidden');
+            var html = data.map(function(a) {
+              return '<div class="pending-card">'
+                + '<div class="flex flex-wrap items-center gap-2 mb-1">'
+                + '<span class="text-white font-bold">' + a.package + '</span>'
+                + '<span class="severity-badge severity-' + a.severity + '">' + a.severity + '</span>'
+                + '<span class="status-badge status-' + a.status + '">' + a.status + '</span>'
+                + '</div>'
+                + '<p class="text-sm text-muted-text">' + a.summary + '</p>'
+                + '<div class="text-xs text-muted-text mt-1">By ' + a.reported_by + ' — ' + a.reported + '</div>'
+                + '</div>';
+            }).join('');
+            document.getElementById('published-list').innerHTML = html;
+          });
+      }
+
+      // ── Load stats ──
+      function loadStats() {
+        var today = new Date().toISOString().split('T')[0];
+        Promise.all([
+          fetch(SUPABASE_URL + '/rest/v1/advisories?select=id', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(SUPABASE_URL + '/rest/v1/pending_advisories?select=id&review_status=eq.pending', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(SUPABASE_URL + '/rest/v1/pending_advisories?select=id&review_status=eq.approved&reviewed_at=gte.' + today + 'T00:00:00', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(SUPABASE_URL + '/rest/v1/pending_advisories?select=id&review_status=eq.rejected&reviewed_at=gte.' + today + 'T00:00:00', { headers: anonHeaders() }).then(function(r) { return r.json(); })
+        ]).then(function(results) {
+          document.getElementById('stat-total').textContent = results[0].length;
+          document.getElementById('stat-pending').textContent = results[1].length;
+          document.getElementById('stat-approved').textContent = results[2].length;
+          document.getElementById('stat-rejected').textContent = results[3].length;
+        });
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        supabase.auth.signOut().then(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
+      });
+    })();
+  </script>
+</MainLayout>

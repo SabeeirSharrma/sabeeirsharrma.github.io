@@ -1,5 +1,44 @@
 # RECORDED-CHANGES
 
+## 2026-06-28 — Maintainer & Volunteer Panels
+
+### Panel System (`/cpac-trust-db/web/panel/`)
+
+- **Login page** (`/panel/login`) — Supabase Auth email/password, role-based redirect
+- **Volunteer panel** (`/panel/volunteer`) — submit advisories, use comparer, view submissions
+- **Maintainer panel** (`/panel/maintainer`) — review pending queue, approve/reject, view stats
+
+### Client-Side Comparer (Volunteer Panel)
+
+- Fetches PKGBUILD from AUR RPC (`aur.archlinux.org/rpc/v5/info/<pkg>`)
+- Computes SHA-256 hash of PKGBUILD content
+- Compares against trust DB snapshots and advisories
+- Replicates the Rust `compare.rs` logic in JavaScript
+- Displays verdict (Clean/Advisory/Divergent/Outdated/Unknown) with score adjustment
+- "Submit as Advisory" button pre-fills the submission form
+
+### Approval Workflow
+
+- Volunteers submit advisories → pending queue (rate-limited: 5/day)
+- Maintainers review → approve (moves to live `advisories` table) or reject (with notes)
+- Supabase RPC functions: `approve_advisory()`, `reject_advisory()`
+- Database trigger enforces daily rate limit per volunteer
+
+### New Database Tables
+
+- `profiles` — links Supabase Auth users to roles (maintainer/volunteer)
+- `pending_advisories` — volunteer submissions awaiting review
+- `daily_submission_counts` view — for rate limit checking
+- Migration: `20260628000000_add_auth_and_roles.sql`
+
+### Modified Files
+
+- **`src/pages/cpac-trust-db/web/panel/login.astro`** — New login page
+- **`src/pages/cpac-trust-db/web/panel/volunteer/index.astro`** — Volunteer dashboard with comparer
+- **`src/pages/cpac-trust-db/web/panel/maintainer/index.astro`** — Maintainer review dashboard
+- **`src/content/docs/cpac-trust-db/governance.md`** — Updated with volunteer/maintainer workflow
+- **`src/content/docs/cpac-trust-db/auth.md`** — Updated with panel auth and roles
+
 ## 2026-06-27 — Donate Page, install.sh, Trust DB Docs, TOS & Privacy
 
 ### Donate Page (`/donate`)
