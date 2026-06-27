@@ -10,14 +10,14 @@ order: 2
 
 ```
 CPAC client
-  writes directly to Supabase (snapshots, tokens)
+       ↓
+  api.thecinderproject.qd.je/cpac-trust-db/api/*
+  Cloudflare Worker (URL proxy, rate limiting, CORS)
        ↓
   Supabase (Postgres)
-  Compiled, queryable database
-  REST API: qzhhsyucnlswmsvpssdh.supabase.co
+  qzhhsyucnlswmsvpssdh.supabase.co
        ↓
-  CPAC client reads (GET advisories, snapshots, meta)
-  Local cache at ~/.cpac/trust-db/
+  CPAC client reads → local cache at ~/.cpac/trust-db/
        ↑
   GitHub Actions (runs nightly)
   Reads from Supabase → commits updated TOML to repo
@@ -25,21 +25,20 @@ CPAC client
 
 ## Why This Stack
 
-- **Supabase (Postgres)** — stable, mature, generous free tier, auto-generated REST API, row-level security handles public read / authenticated write cleanly. CPAC clients talk directly to Supabase — no proxy or intermediate server.
+- **Cloudflare Worker** — proxies `api.thecinderproject.qd.je` to Supabase. Provides a stable API URL independent of the backend, handles CORS, and can add rate limiting or request logging later.
+- **Supabase (Postgres)** — stable, mature, generous free tier, auto-generated REST API, row-level security handles public read / authenticated write cleanly.
 - **GitHub** — source of truth, fully auditable, human-readable TOML diffs on every advisory or snapshot change. GitHub Actions reads aggregated data from Supabase and commits updated TOML files on a schedule (nightly). One single commit per run, no overlap possible.
 
 ## Data Flow
 
-1. **Snapshots** — CPAC clients POST directly to Supabase REST API
+1. **Snapshots** — CPAC clients POST to `api.thecinderproject.qd.je/cpac-trust-db/api/snapshots` → Worker proxies to Supabase
 2. **Advisories** — Core team merges TOML to `main` → GitHub Actions upserts to Supabase
 3. **Sync** — GitHub Actions runs nightly → reads from Supabase → commits TOML to repo
-4. **Queries** — CPAC client hits Supabase REST API → reads data → caches locally
+4. **Queries** — CPAC client hits Worker API → Worker proxies to Supabase → CPAC caches locally
 
-## No API Proxy
+## Direct Supabase (Fallback)
 
-CPAC talks directly to Supabase at `https://qzhhsyucnlswmsvpssdh.supabase.co`. There is no custom domain proxy or中间 layer. The Supabase anon key is embedded in the CPAC client, which is safe because row-level security policies enforce public reads and rate-limited writes only.
-
-A custom domain proxy (e.g. `thecinderproject.qd.je/cpac-trust-db/api/*`) was planned but not implemented — GitHub Pages is static and cannot proxy API requests. If a proxy is needed in the future (e.g. for API key rotation or request logging), it can be added as a Cloudflare Worker without changing the CPAC client architecture.
+If the proxy is unavailable, CPAC clients can fall back to direct Supabase access at `https://qzhhsyucnlswmsvpssdh.supabase.co`. The anon key is embedded in the client, which is safe because row-level security policies enforce public reads and rate-limited writes only.
 
 ---
 
