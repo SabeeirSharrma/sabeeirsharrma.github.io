@@ -1,5 +1,68 @@
 # RECORDED-CHANGES
 
+## 2026-06-28 — Phase 9: NVIDIA NIM Integration
+
+### Worker: NVIDIA NIM Proxy
+
+- `callNvidiaNim()` helper — OpenAI-compatible API calls to NVIDIA NIM
+- `POST /ai/analyze-diff` — reasoning model for security diff analysis, stores in `ai_analysis` cache
+- `POST /ai/generate-report` — nano model for weekly report insights
+- `NVIDIA_API_KEY` added to env, Worker deployed
+
+### Panel Updates
+
+- All panels: `runAiAnalysisBase()` calls Worker `/ai/analyze-diff` (not direct Supabase)
+- All panels: `renderAiResult()` handles structured JSON (summary, severity, affected/safe versions)
+- Cache check still from Supabase `ai_analysis` table (3-hour TTL)
+
+### Cron Trigger
+
+- Worker `scheduled()` handler calls `/reports/generate` + `/reports/send`
+- Cron: `0 0 * * *` (daily at midnight UTC)
+- Config migrated from `wrangler.toml` to `wrangler.jsonc`
+
+### Modified Files
+
+- **`worker/wrangler.jsonc`** — new config (replaces wrangler.toml)
+- **`worker/src/index.ts`** — scheduled handler, NVIDIA NIM endpoints, account creation
+- **`src/pages/cpac-trust-db/web/panel/volunteer/index.astro`** — AI via Worker endpoint
+- **`src/pages/cpac-trust-db/web/panel/maintainer/index.astro`** — AI via Worker endpoint
+- **`src/pages/cpac-trust-db/web/panel/admin/index.astro`** — AI via Worker endpoint
+
+## 2026-06-28 — Phase 8: Panel Redesign (Review Workflow + Notes)
+
+### Unified Review Tab
+
+- Replaced old "Comparer" tab with "Review" tab in all three panels
+- Package list auto-fetched on tab load (packages needing advisories)
+- Automated LCS diff on package select
+- AI analysis on-demand (3-hour cache)
+- "Recompare" button for manual re-run
+
+### Layout Toggle
+
+- Tabs or Side-by-Side layout, persisted to `localStorage` (`cpac-layout`)
+- Toggle button in panel header
+
+### Notes System
+
+- Floating notes button (bottom-right)
+- Textarea overlay with auto-save to `localStorage` (`cpac-notes-{pkgName}`)
+- Cleared automatically when advisory is published
+- Persists across page reloads
+
+### NetworkError Fix
+
+- Panels were calling unreachable Worker proxy URL (`api.thecinderproject.qd.je`)
+- Fixed: data calls → Supabase REST API directly
+- AUR proxy + accounts/create → Worker direct URL
+
+### Modified Files
+
+- **`src/pages/cpac-trust-db/web/panel/volunteer/index.astro`** — Review tab, layout toggle, notes
+- **`src/pages/cpac-trust-db/web/panel/maintainer/index.astro`** — Review tab, layout toggle, notes
+- **`src/pages/cpac-trust-db/web/panel/admin/index.astro`** — Review tab, layout toggle, notes, accounts
+
 ## 2026-06-29 — Phase 6: CPAC Client Updates
 
 ### Help Text
