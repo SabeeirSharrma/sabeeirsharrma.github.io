@@ -58,7 +58,7 @@ import MainLayout from '../../../../layouts/MainLayout.astro';
         // If already logged in, redirect
         supabase.auth.getSession().then(function(result) {
           if (result.data.session) {
-            redirectByRole(result.data.session.user.id);
+            redirectByRole(result.data.session.user.id, result.data.session.access_token);
           }
         });
 
@@ -82,7 +82,7 @@ import MainLayout from '../../../../layouts/MainLayout.astro';
                 btn.disabled = false;
                 return;
               }
-              redirectByRole(result.data.user.id);
+              redirectByRole(result.data.user.id, result.data.session.access_token);
             })
             .catch(function(err) {
               errorEl.textContent = err.message || 'Login failed';
@@ -92,8 +92,8 @@ import MainLayout from '../../../../layouts/MainLayout.astro';
             });
         });
 
-        function redirectByRole(userId) {
-          var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+        function redirectByRole(userId, accessToken) {
+          var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + accessToken };
           fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId + '&select=role', { headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(data) {
