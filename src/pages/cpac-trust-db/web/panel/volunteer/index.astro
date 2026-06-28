@@ -259,6 +259,7 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
       var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
       var supabase = null;
       var currentUser = null;
+      var currentSession = null;
       var userProfile = null;
       var searchTimeout = null;
       var currentPkgData = null;
@@ -278,13 +279,14 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         supabase.auth.getSession().then(function(result) {
           if (!result.data.session) { window.location.href = '/cpac-trust-db/web/panel/login/'; return; }
           currentUser = result.data.session.user;
+          currentSession = result.data.session;
           loadProfile();
         });
       }
 
       function loadProfile() {
         fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + currentUser.id + '&select=*', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+          headers: authHeaders()
         }).then(function(r) { return r.json(); }).then(function(data) {
           if (!data || data.length === 0 || data[0].role !== 'volunteer') {
             window.location.href = '/cpac-trust-db/web/panel/login/'; return;
@@ -299,7 +301,7 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
       }
 
       function authHeaders() {
-        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentUser.id, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession.access_token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
       }
       function anonHeaders() { return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }; }
 
