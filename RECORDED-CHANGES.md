@@ -1,5 +1,24 @@
 # RECORDED-CHANGES
 
+## 2026-06-30 — Bidirectional Advisory Statuses
+
+### Advisory Status Update
+
+- All three panels: status dropdown updated with new values
+  - `suspicious` (default) — under investigation
+  - `warning` — credible concern
+  - `malicious` — confirmed malicious
+  - `safe` — verified clean (positive attestation)
+- Old `confirmed`/`suspected` replaced with descriptive labels
+- Statuses are bidirectional: `safe` adds +10 trust signal, negative statuses add penalties
+
+### Modified Files
+
+- **`src/pages/cpac-trust-db/web/panel/volunteer/index.astro`** — status dropdown updated
+- **`src/pages/cpac-trust-db/web/panel/maintainer/index.astro`** — status dropdown updated
+- **`src/pages/cpac-trust-db/web/panel/admin/index.astro`** — status dropdown updated
+- **`supabase/migrations/20260630000000_update_advisory_statuses.sql`** — new migration
+
 ## 2026-06-28 — Phase 9: NVIDIA NIM Integration
 
 ### Worker: NVIDIA NIM Proxy

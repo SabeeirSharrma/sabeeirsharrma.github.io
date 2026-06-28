@@ -139,8 +139,10 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
                     <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Status *</label>
                     <select id="f-status" required
                       class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
-                      <option value="suspected" selected>Suspected</option>
-                      <option value="confirmed">Confirmed</option>
+                      <option value="suspicious" selected>Suspicious — under investigation</option>
+                      <option value="warning">Warning — credible concern</option>
+                      <option value="malicious">Malicious — confirmed</option>
+                      <option value="safe">Safe — verified clean</option>
                     </select>
                   </div>
                 </div>
