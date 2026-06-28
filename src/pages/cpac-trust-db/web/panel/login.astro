@@ -97,8 +97,15 @@ import MainLayout from '../../../../layouts/MainLayout.astro';
           fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId + '&select=role', { headers: headers })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-              if (data && data.length > 0 && data[0].role === 'maintainer') {
-                window.location.href = '/cpac-trust-db/web/panel/maintainer/';
+              if (data && data.length > 0) {
+                var role = data[0].role;
+                if (role === 'admin') {
+                  window.location.href = '/cpac-trust-db/web/panel/admin/';
+                } else if (role === 'maintainer') {
+                  window.location.href = '/cpac-trust-db/web/panel/maintainer/';
+                } else {
+                  window.location.href = '/cpac-trust-db/web/panel/volunteer/';
+                }
               } else {
                 window.location.href = '/cpac-trust-db/web/panel/volunteer/';
               }

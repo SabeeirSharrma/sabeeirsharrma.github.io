@@ -9,7 +9,6 @@ order: 12
 | Project | Role |
 |---|---|
 | `cpac` | Consumes trust-db; submits snapshots on `cpac update` |
-| `cinderos` | Ships CPAC (and therefore trust-db) by default |
 | `website` | Public advisory index at `thecinderproject.qd.je/advisories` |
 
 ---

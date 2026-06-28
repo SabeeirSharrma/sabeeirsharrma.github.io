@@ -1,0 +1,91 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Projects" description="All projects under The Cinder Project.">
+  <div class="container mx-auto px-4 py-16 max-w-5xl">
+
+    <!-- Header -->
+    <header class="mb-12 text-center">
+      <div class="flex items-center justify-center gap-2 text-xs font-bold tracking-widest uppercase text-ember-core mb-3 anim-slide-up">
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none">
+          <path d="M2 3h12v2H2zM2 7h8v2H2zM2 11h10v2H2z" fill="currentColor"/>
+        </svg>
+        All Projects
+      </div>
+      <h1 class="text-4xl md:text-5xl font-heading text-white mb-4 uppercase tracking-widest anim-slide-up delay-2">Projects</h1>
+      <p class="text-lg text-muted-text leading-relaxed anim-slide-up delay-3">
+        The tools we build to make a safer, more transparent internet.
+      </p>
+    </header>
+
+    <!-- Project Cards -->
+    <div class="space-y-8">
+
+      <!-- CPAC -->
+      <div class="card group relative overflow-hidden reveal stagger-1">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-cinder-mid rounded-bl-full opacity-10 group-hover:opacity-25 transition-opacity duration-500"></div>
+        <div class="flex flex-col md:flex-row md:items-center gap-6 relative z-10">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-3">
+              <h3 class="text-2xl font-heading text-white">CPAC</h3>
+              <span class="text-xs font-bold tracking-widest uppercase px-2 py-1 rounded bg-cinder-mid/30 text-cinder-light">Active</span>
+            </div>
+            <p class="text-muted-text mb-4">
+              Community Package Analysis Client — a package trust layer for Arch-based Linux distributions. Analyzes packages from official repos and the AUR, providing detailed trust scores before you install anything. CPAC is an advisor, not a package manager replacement.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <a href="/cpac" class="btn-primary text-sm px-4 py-2">Page</a>
+              <a href="/cpac/docs" class="btn-secondary text-sm px-4 py-2">Docs</a>
+              <a href="https://github.com/SabeeirSharrma/cpac" class="btn-secondary text-sm px-4 py-2" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CPAC Trust DB -->
+      <div class="card group relative overflow-hidden reveal stagger-2">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-ember-core rounded-bl-full opacity-10 group-hover:opacity-25 transition-opacity duration-500"></div>
+        <div class="flex flex-col md:flex-row md:items-center gap-6 relative z-10">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-3">
+              <h3 class="text-2xl font-heading text-white">CPAC Trust DB</h3>
+              <span class="text-xs font-bold tracking-widest uppercase px-2 py-1 rounded bg-ember-core/30 text-ember-light">Active</span>
+            </div>
+            <p class="text-muted-text mb-4">
+              Community-maintained trust database for CPAC. Stores sanitized/anonymized PKGBUILD hashes and snapshots with advisories. Allows CPAC clients to verify packages against real community data instead of relying solely on public repo metadata.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <a href="/cpac-trust-db" class="btn-primary text-sm px-4 py-2">Page</a>
+              <a href="/cpac-trust-db/docs" class="btn-secondary text-sm px-4 py-2">Docs</a>
+              <a href="https://github.com/SabeeirSharrma/cpac-trust-db" class="btn-secondary text-sm px-4 py-2" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CinderOS -->
+      <div class="card group relative overflow-hidden reveal stagger-3">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-elevated rounded-bl-full opacity-10 group-hover:opacity-25 transition-opacity duration-500"></div>
+        <div class="flex flex-col md:flex-row md:items-center gap-6 relative z-10">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-3">
+              <h3 class="text-2xl font-heading text-white">CinderOS</h3>
+              <span class="text-xs font-bold tracking-widest uppercase px-2 py-1 rounded bg-elevated/30 text-muted-text">Planned</span>
+            </div>
+            <p class="text-muted-text mb-4">
+              An Arch-based developer-focused distribution. CinderOS will ship CPAC by default, providing a secure-by-default package verification experience for developers.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Back link -->
+    <div class="text-center mt-12">
+      <a href="/#projects" class="btn-secondary text-sm px-6 py-2">Back to Home</a>
+    </div>
+
+  </div>
+</MainLayout>

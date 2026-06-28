@@ -1,0 +1,742 @@
+---
+import MainLayout from '../../../../../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Admin Panel" description="CPAC Trust DB — Admin Dashboard">
+  <div class="container mx-auto px-4 py-16 max-w-6xl">
+
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="text-center py-20">
+      <p class="text-muted-text">Checking access...</p>
+    </div>
+
+    <!-- Dashboard (hidden until auth) -->
+    <div id="dashboard" class="hidden">
+
+      <!-- Header -->
+      <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-heading text-white uppercase tracking-widest">Admin Panel</h1>
+          <p class="text-muted-text text-sm mt-1">Account management, advisory review, and system oversight</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-xs text-muted-text">Pending review</div>
+            <div class="text-lg font-heading text-ember-core" id="pending-count">0</div>
+          </div>
+          <button id="logoutBtn" class="text-xs text-muted-text hover:text-ember-core border border-border rounded-lg px-3 py-2 cursor-pointer transition-colors bg-surface">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-8 border-b border-border overflow-x-auto">
+        <button id="tab-accounts" class="tab-btn active" onclick="showTab('accounts')">Accounts</button>
+        <button id="tab-pending" class="tab-btn" onclick="showTab('pending')">Pending Review</button>
+        <button id="tab-published" class="tab-btn" onclick="showTab('published')">Published</button>
+        <button id="tab-comparer" class="tab-btn" onclick="showTab('comparer')">Comparer</button>
+        <button id="tab-inactivity" class="tab-btn" onclick="showTab('inactivity')">Inactivity</button>
+        <button id="tab-stats" class="tab-btn" onclick="showTab('stats')">Stats</button>
+      </div>
+
+      <!-- Accounts Tab -->
+      <div id="panel-accounts" class="tab-panel">
+        <div class="bg-surface border border-border rounded-xl p-6 mb-6">
+          <h2 class="text-lg font-heading text-white mb-2 uppercase tracking-widest">Create Account</h2>
+          <p class="text-sm text-muted-text mb-4">Manually create a volunteer or maintainer account.</p>
+          <form id="createForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Email *</label>
+              <input type="email" id="c-email" required placeholder="user@example.com"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Role *</label>
+              <select id="c-role" required
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
+                <option value="volunteer">Volunteer</option>
+                <option value="maintainer">Maintainer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Display Name *</label>
+              <input type="text" id="c-name" required placeholder="John Doe"
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            </div>
+            <div class="md:col-span-3">
+              <div id="create-error" class="hidden text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-4 py-2 mb-2"></div>
+              <div id="create-success" class="hidden text-sm text-green-400 bg-green-900/20 border border-green-800 rounded-lg px-4 py-2 mb-2"></div>
+              <button type="submit" id="createBtn"
+                class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer">
+                Create Account
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-surface border border-border rounded-xl p-6">
+          <h2 class="text-lg font-heading text-white mb-4 uppercase tracking-widest">All Accounts</h2>
+          <div id="accounts-loading" class="text-center py-4 text-muted-text">Loading accounts...</div>
+          <div id="accounts-list" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Pending Tab -->
+      <div id="panel-pending" class="tab-panel hidden">
+        <div id="pending-loading" class="text-center py-8 text-muted-text">Loading pending submissions...</div>
+        <div id="pending-empty" class="hidden text-center py-8">
+          <div class="text-5xl mb-3 opacity-30">✓</div>
+          <p class="text-muted-text">No pending submissions</p>
+        </div>
+        <div id="pending-list" class="space-y-4"></div>
+      </div>
+
+      <!-- Published Tab -->
+      <div id="panel-published" class="tab-panel hidden">
+        <div id="published-loading" class="text-center py-8 text-muted-text">Loading published advisories...</div>
+        <div id="published-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Comparer Tab -->
+      <div id="panel-comparer" class="tab-panel hidden">
+        <div class="bg-surface border border-border rounded-xl p-6 mb-6">
+          <h2 class="text-lg font-heading text-white mb-2 uppercase tracking-widest">Package Comparer</h2>
+          <p class="text-sm text-muted-text mb-4">Compare two versions of a package PKGBUILD side-by-side.</p>
+          <div class="relative mb-4">
+            <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Package</label>
+            <input type="text" id="a-pkgSearch" placeholder="Start typing a package name..."
+              class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            <div id="a-pkgDropdown" class="hidden absolute z-20 w-full bg-base border border-border rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg"></div>
+          </div>
+          <div id="a-version-selectors" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Old Version</label>
+                <select id="a-versionOld" class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">New Version</label>
+                <select id="a-versionNew" class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors"></select>
+              </div>
+            </div>
+            <button id="a-compareBtn" class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer">Compare Versions</button>
+          </div>
+        </div>
+        <div id="a-compare-loading" class="hidden text-center py-8 text-muted-text">Fetching PKGBUILDs...</div>
+        <div id="a-compare-error" class="hidden bg-red-900/20 border border-red-800 rounded-xl p-4 text-red-400 text-sm mb-6"></div>
+        <div id="a-compare-result" class="hidden"></div>
+      </div>
+
+      <!-- Inactivity Tab -->
+      <div id="panel-inactivity" class="tab-panel hidden">
+        <div class="bg-surface border border-border rounded-xl p-6 mb-6">
+          <h2 class="text-lg font-heading text-white mb-2 uppercase tracking-widest">Volunteer Inactivity</h2>
+          <p class="text-sm text-muted-text">Volunteers with zero submissions in 30+ days. Accounts may be suspended.</p>
+        </div>
+        <div id="inactive-loading" class="text-center py-8 text-muted-text">Checking for inactive volunteers...</div>
+        <div id="inactive-empty" class="hidden text-center py-8">
+          <p class="text-muted-text">All volunteers are active.</p>
+        </div>
+        <div id="inactive-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Stats Tab -->
+      <div id="panel-stats" class="tab-panel hidden">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-total">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Published</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-pending">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Pending</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-volunteers">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Volunteers</div>
+          </div>
+          <div class="bg-surface p-4 rounded-lg border border-border text-center">
+            <div class="text-3xl font-heading text-ember-core" id="stat-maintainers">—</div>
+            <div class="text-xs text-muted-text uppercase tracking-wider">Maintainers</div>
+          </div>
+        </div>
+
+        <!-- Volunteer Reputation -->
+        <div class="bg-surface border border-border rounded-xl p-6">
+          <h2 class="text-lg font-heading text-white mb-4 uppercase tracking-widest">Volunteer Reputation</h2>
+          <div id="admin-rep-loading" class="text-center py-4 text-muted-text">Loading...</div>
+          <div id="admin-rep-list" class="space-y-3"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    .tab-btn {
+      padding: 0.75rem 1.5rem; font-family: var(--font-heading); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem;
+      color: var(--color-muted-text); border-bottom: 2px solid transparent;
+      transition: all 0.2s; cursor: pointer; background: none;
+      border-top: none; border-left: none; border-right: none; white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--color-ember-light); }
+    .tab-btn.active { color: var(--color-ember-core); border-bottom-color: var(--color-ember-core); }
+    .pending-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 0.5rem; padding: 1.25rem; transition: border-color 0.2s;
+    }
+    .pending-card:hover { border-color: var(--color-cinder-mid); }
+    .severity-badge, .status-badge, .review-badge, .role-badge {
+      display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .severity-critical { background: #7f1d1d; color: #fca5a5; }
+    .severity-high { background: #92400e; color: #fcd34d; }
+    .severity-medium { background: #713f12; color: #fde68a; }
+    .severity-low { background: #1e3a5f; color: #93c5fd; }
+    .status-confirmed { background: #7f1d1d; color: #fca5a5; }
+    .status-suspected { background: #713f12; color: #fde68a; }
+    .review-pending { background: #713f12; color: #fde68a; }
+    .review-approved { background: #14532d; color: #86efac; }
+    .review-rejected { background: #7f1d1d; color: #fca5a5; }
+    .role-admin { background: #7f1d1d; color: #fca5a5; }
+    .role-maintainer { background: #1e3a5f; color: #93c5fd; }
+    .role-volunteer { background: #14532d; color: #86efac; }
+    .action-btn {
+      font-family: var(--font-heading); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; font-size: 0.75rem; padding: 0.5rem 1rem;
+      border-radius: 0.5rem; cursor: pointer; transition: all 0.15s; border: none;
+    }
+    .pkg-option {
+      padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem;
+      color: var(--color-muted-text); transition: background 0.15s;
+    }
+    .pkg-option:hover { background: var(--color-surface); color: var(--color-white); }
+    .diff-line { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; padding: 0.1rem 0.5rem; white-space: pre-wrap; word-break: break-all; }
+    .diff-add { background: #14532d40; color: #86efac; }
+    .diff-del { background: #7f1d1d40; color: #fca5a5; }
+    .diff-hunk { color: var(--color-ember-core); font-weight: 600; font-size: 0.75rem; padding: 0.3rem 0.5rem; background: var(--color-surface); }
+    .account-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 0.5rem; padding: 1rem 1.25rem; transition: border-color 0.2s;
+    }
+    .account-card:hover { border-color: var(--color-cinder-mid); }
+    .vol-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 0.5rem; padding: 1rem 1.25rem; transition: border-color 0.2s;
+    }
+    .vol-card:hover { border-color: var(--color-cinder-mid); }
+    .tier-badge {
+      display: inline-block; padding: 0.15rem 0.6rem; border-radius: 9999px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .tier-trusted { background: #14532d; color: #86efac; }
+    .tier-standard { background: #1e3a5f; color: #93c5fd; }
+    .tier-probation { background: #713f12; color: #fde68a; }
+    .tier-suspended { background: #7f1d1d; color: #fca5a5; }
+  </style>
+
+  <script is:inline>
+    (function() {
+      var WORKER_BASE = 'https://api.thecinderproject.qd.je';
+      var API_PREFIX = WORKER_BASE + '/cpac-trust-db/api';
+      var SUPABASE_URL = 'https://qzhhsyucnlswmsvpssdh.supabase.co';
+      var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
+      var supabase = null;
+      var currentUser = null;
+      var aSearchTimeout = null;
+      var aCurrentPkgData = null;
+
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      script.onload = init;
+      document.head.appendChild(script);
+
+      function init() {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        checkAuth();
+      }
+
+      function checkAuth() {
+        supabase.auth.getSession().then(function(result) {
+          if (!result.data.session) { window.location.href = '/cpac-trust-db/web/panel/login/'; return; }
+          currentUser = result.data.session.user;
+          loadProfile();
+        });
+      }
+
+      function loadProfile() {
+        fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + currentUser.id + '&select=*', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (!data || data.length === 0 || data[0].role !== 'admin') {
+            window.location.href = '/cpac-trust-db/web/panel/login/';
+            return;
+          }
+          document.getElementById('auth-gate').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+          loadAccounts();
+          loadPending();
+          loadPublished();
+          loadStats();
+          loadInactive();
+        }).catch(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
+      }
+
+      function anonHeaders() { return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }; }
+      function authHeaders() {
+        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+      }
+
+      window.showTab = function(name) {
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.add('hidden'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('panel-' + name).classList.remove('hidden');
+        document.getElementById('tab-' + name).classList.add('active');
+        if (name === 'stats') loadVolunteerReputation();
+      };
+
+      // ══════════════════════════════════════════════
+      //  ACCOUNT MANAGEMENT
+      // ══════════════════════════════════════════════
+
+      function loadAccounts() {
+        fetch(SUPABASE_URL + '/rest/v1/profiles?select=*,pending_advisories(count)&order=created_at.desc', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('accounts-loading').classList.add('hidden');
+          if (!data || data.length === 0) return;
+          var html = data.map(function(p) {
+            var roleClass = 'role-' + p.role;
+            return '<div class="account-card" id="acct-' + p.id + '">'
+              + '<div class="flex flex-wrap items-center gap-3 mb-2">'
+              + '<span class="text-white font-bold">' + (p.display_name || 'Unnamed') + '</span>'
+              + '<span class="role-badge ' + roleClass + '">' + p.role + '</span>'
+              + '<span class="text-xs text-muted-text">' + (p.id ? p.id.substring(0, 8) + '...' : '') + '</span>'
+              + '<span class="text-xs text-muted-text ml-auto">Joined ' + new Date(p.created_at).toLocaleDateString() + '</span>'
+              + '</div>'
+              + '<div class="flex gap-2 mt-2">'
+              + '<button onclick="changeRole(\'' + p.id + '\',\'' + p.role + '\')" class="action-btn bg-elevated hover:bg-cinder-dark text-muted-text border border-border">Change Role</button>'
+              + '<button onclick="deleteAccount(\'' + p.id + '\',\'' + (p.display_name || 'Unnamed') + '\')" class="action-btn bg-red-900 hover:bg-red-800 text-red-200">Delete</button>'
+              + '</div>'
+              + '<div id="acct-msg-' + p.id + '" class="hidden text-xs mt-2"></div>'
+              + '</div>';
+          }).join('');
+          document.getElementById('accounts-list').innerHTML = html;
+        });
+      }
+
+      // Create account form
+      document.getElementById('createForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var errorEl = document.getElementById('create-error');
+        var successEl = document.getElementById('create-success');
+        var btn = document.getElementById('createBtn');
+        errorEl.classList.add('hidden'); successEl.classList.add('hidden');
+        btn.textContent = 'Creating...'; btn.disabled = true;
+
+        var email = document.getElementById('c-email').value.trim();
+        var role = document.getElementById('c-role').value;
+        var name = document.getElementById('c-name').value.trim();
+
+        try {
+          var res = await fetch(API_PREFIX + '/accounts/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, role: role, display_name: name })
+          });
+          var data = await res.json();
+
+          if (!res.ok) {
+            errorEl.textContent = data.error || data.detail?.error || 'Failed to create account.';
+            errorEl.classList.remove('hidden');
+            btn.textContent = 'Create Account'; btn.disabled = false;
+            return;
+          }
+
+          successEl.innerHTML = 'Account created!<br>'
+            + '<strong>Email:</strong> ' + data.email + '<br>'
+            + '<strong>Role:</strong> ' + data.role + '<br>'
+            + '<strong>Temp Password:</strong> <code style="background:#1a1a1a;color:#86efac;padding:2px 6px;border-radius:4px;">' + data.tempPassword + '</code><br>'
+            + '<span class="text-xs text-muted-text">Credentials have been emailed to the user.</span>';
+          successEl.classList.remove('hidden');
+          document.getElementById('createForm').reset();
+          loadAccounts();
+        } catch(err) {
+          errorEl.textContent = 'Error: ' + err.message;
+          errorEl.classList.remove('hidden');
+        }
+        btn.textContent = 'Create Account'; btn.disabled = false;
+      });
+
+      window.changeRole = async function(userId, currentRole) {
+        var msgEl = document.getElementById('acct-msg-' + userId);
+        var newRole = currentRole === 'volunteer' ? 'maintainer' : 'volunteer';
+        if (!confirm('Change role from ' + currentRole + ' to ' + newRole + '?')) return;
+
+        msgEl.className = 'text-xs mt-2 text-yellow-400';
+        msgEl.textContent = 'Updating...';
+
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+            method: 'PATCH',
+            headers: authHeaders(),
+            body: JSON.stringify({ role: newRole })
+          });
+          if (res.ok) {
+            msgEl.className = 'text-xs mt-2 text-green-400';
+            msgEl.textContent = 'Role changed to ' + newRole;
+            setTimeout(loadAccounts, 1000);
+          } else {
+            var err = await res.text();
+            msgEl.className = 'text-xs mt-2 text-red-400';
+            msgEl.textContent = 'Error: ' + err;
+          }
+        } catch(e) {
+          msgEl.className = 'text-xs mt-2 text-red-400';
+          msgEl.textContent = 'Error: ' + e.message;
+        }
+      };
+
+      window.deleteAccount = async function(userId, name) {
+        if (!confirm('DELETE account "' + name + '"? This cannot be undone.')) return;
+        if (!confirm('Are you absolutely sure? The user will lose all access.')) return;
+
+        var msgEl = document.getElementById('acct-msg-' + userId);
+        msgEl.className = 'text-xs mt-2 text-yellow-400';
+        msgEl.textContent = 'Deleting...';
+
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId, {
+            method: 'DELETE',
+            headers: authHeaders()
+          });
+          if (res.ok) {
+            msgEl.className = 'text-xs mt-2 text-green-400';
+            msgEl.textContent = 'Account deleted.';
+            setTimeout(loadAccounts, 1000);
+          } else {
+            var err = await res.text();
+            msgEl.className = 'text-xs mt-2 text-red-400';
+            msgEl.textContent = 'Error: ' + err;
+          }
+        } catch(e) {
+          msgEl.className = 'text-xs mt-2 text-red-400';
+          msgEl.textContent = 'Error: ' + e.message;
+        }
+      };
+
+      // ══════════════════════════════════════════════
+      //  PENDING ADVISORIES
+      // ══════════════════════════════════════════════
+
+      function loadPending() {
+        fetch(API_PREFIX + '/pending_advisories?select=*,profiles:submitted_by(display_name)&review_status=eq.pending&order=created_at.asc', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('pending-loading').classList.add('hidden');
+          document.getElementById('pending-count').textContent = data.length;
+          if (data.length === 0) { document.getElementById('pending-empty').classList.remove('hidden'); return; }
+          var html = data.map(function(s) {
+            var submitter = s.profiles ? s.profiles.display_name : 'Unknown';
+            return '<div class="pending-card">'
+              + '<div class="flex flex-wrap items-center gap-2 mb-2">'
+              + '<h3 class="text-lg font-heading text-white">' + s.package + '</h3>'
+              + '<span class="severity-badge severity-' + s.severity + '">' + s.severity + '</span>'
+              + '<span class="status-badge status-' + s.status + '">' + s.status + '</span>'
+              + '<span class="text-xs text-muted-text ml-auto">by ' + submitter + ' — ' + new Date(s.created_at).toLocaleDateString() + '</span>'
+              + '</div>'
+              + '<p class="text-sm text-muted-text mb-3">' + s.summary + '</p>'
+              + (s.description ? '<p class="text-xs text-muted-text mb-3 whitespace-pre-line">' + s.description + '</p>' : '')
+              + (s.cve ? '<div class="text-xs text-muted-text mb-2">CVE: <span class="text-white">' + s.cve + '</span></div>' : '')
+              + '<div class="flex gap-2 mt-3">'
+              + '<button onclick="approveAdvisory(\'' + s.id + '\')" class="action-btn bg-green-800 hover:bg-green-700 text-green-100">Approve</button>'
+              + '<button onclick="rejectAdvisory(\'' + s.id + '\')" class="action-btn bg-red-800 hover:bg-red-700 text-red-100">Reject</button>'
+              + '</div>'
+              + '<div id="action-msg-' + s.id + '" class="hidden text-xs mt-2"></div>'
+              + '</div>';
+          }).join('');
+          document.getElementById('pending-list').innerHTML = html;
+        });
+      }
+
+      window.approveAdvisory = async function(id) {
+        var msgEl = document.getElementById('action-msg-' + id);
+        msgEl.className = 'text-xs mt-2 text-green-400'; msgEl.textContent = 'Approving...';
+        try {
+          var res = await fetch(API_PREFIX + '/rpc/approve_advisory', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ p_pending_id: id, p_reviewed_by: currentUser.id, p_review_notes: '' })
+          });
+          if (res.ok) { msgEl.textContent = 'Approved!'; setTimeout(function() { loadPending(); loadPublished(); loadStats(); }, 1000); }
+          else { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = 'Error: ' + await res.text(); }
+        } catch(e) { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = e.message; }
+      };
+
+      window.rejectAdvisory = async function(id) {
+        var notes = prompt('Rejection reason (optional):');
+        var msgEl = document.getElementById('action-msg-' + id);
+        msgEl.className = 'text-xs mt-2 text-yellow-400'; msgEl.textContent = 'Rejecting...';
+        try {
+          var res = await fetch(API_PREFIX + '/rpc/reject_advisory', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ p_pending_id: id, p_reviewed_by: currentUser.id, p_review_notes: notes || '' })
+          });
+          if (res.ok) { msgEl.textContent = 'Rejected.'; setTimeout(function() { loadPending(); loadStats(); }, 1000); }
+          else { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = 'Error: ' + await res.text(); }
+        } catch(e) { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = e.message; }
+      };
+
+      // ══════════════════════════════════════════════
+      //  PUBLISHED ADVISORIES
+      // ══════════════════════════════════════════════
+
+      function loadPublished() {
+        fetch(API_PREFIX + '/advisories?select=*&order=reported.desc', { headers: anonHeaders() })
+          .then(function(r) { return r.json(); }).then(function(data) {
+            document.getElementById('published-loading').classList.add('hidden');
+            var html = data.map(function(a) {
+              return '<div class="pending-card">'
+                + '<div class="flex flex-wrap items-center gap-2 mb-1">'
+                + '<span class="text-white font-bold">' + a.package + '</span>'
+                + '<span class="severity-badge severity-' + a.severity + '">' + a.severity + '</span>'
+                + '<span class="status-badge status-' + a.status + '">' + a.status + '</span>'
+                + '</div>'
+                + '<p class="text-sm text-muted-text">' + a.summary + '</p>'
+                + '<div class="text-xs text-muted-text mt-1">By ' + a.reported_by + ' — ' + a.reported + '</div>'
+                + '</div>';
+            }).join('');
+            document.getElementById('published-list').innerHTML = html;
+          });
+      }
+
+      // ══════════════════════════════════════════════
+      //  COMPARER
+      // ══════════════════════════════════════════════
+
+      var aPkgSearch = document.getElementById('a-pkgSearch');
+      var aPkgDropdown = document.getElementById('a-pkgDropdown');
+
+      aPkgSearch.addEventListener('input', function() {
+        var q = aPkgSearch.value.trim();
+        clearTimeout(aSearchTimeout);
+        if (q.length < 2) { aPkgDropdown.classList.add('hidden'); return; }
+        aSearchTimeout = setTimeout(function() { aSearchPackages(q); }, 300);
+      });
+
+      aPkgSearch.addEventListener('focus', function() {
+        if (aPkgDropdown.children.length > 0 && aPkgSearch.value.trim().length >= 2) aPkgDropdown.classList.remove('hidden');
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!aPkgSearch.contains(e.target) && !aPkgDropdown.contains(e.target)) aPkgDropdown.classList.add('hidden');
+      });
+
+      async function aSearchPackages(q) {
+        var html = '';
+        try {
+          var snapRes = await fetch(API_PREFIX + '/snapshots?select=package&package=like.' + encodeURIComponent(q) + '*&limit=10', { headers: anonHeaders() });
+          var snaps = await snapRes.json();
+          var dbPkgs = [...new Set(snaps.map(function(s) { return s.package; }))];
+          dbPkgs.forEach(function(p) { html += '<div class="pkg-option" data-pkg="' + p + '">' + p + ' <span class="text-xs text-muted-text">(DB)</span></div>'; });
+        } catch(e) {}
+        try {
+          var aurRes = await fetch(API_PREFIX + '/aur/info/' + encodeURIComponent(q));
+          var aurData = await aurRes.json();
+          if (aurData.results) aurData.results.slice(0, 5).forEach(function(r) {
+            if (!dbPkgs || dbPkgs.indexOf(r.Name) === -1) html += '<div class="pkg-option" data-pkg="' + r.Name + '">' + r.Name + ' <span class="text-xs text-muted-text">(AUR)</span></div>';
+          });
+        } catch(e) {}
+        if (!html) html = '<div class="pkg-option text-muted-text">No results</div>';
+        aPkgDropdown.innerHTML = html; aPkgDropdown.classList.remove('hidden');
+        aPkgDropdown.querySelectorAll('.pkg-option[data-pkg]').forEach(function(opt) {
+          opt.addEventListener('click', function() { aSelectPackage(opt.dataset.pkg); aPkgDropdown.classList.add('hidden'); });
+        });
+      }
+
+      async function aSelectPackage(pkg) {
+        aPkgSearch.value = pkg;
+        var loading = document.getElementById('a-compare-loading');
+        var error = document.getElementById('a-compare-error');
+        loading.classList.remove('hidden'); error.classList.add('hidden');
+        try {
+          var snapRes = await fetch(API_PREFIX + '/snapshots?select=*&package=eq.' + encodeURIComponent(pkg), { headers: anonHeaders() });
+          var snapshots = await snapRes.json();
+          var aurRes = await fetch(API_PREFIX + '/aur/info/' + encodeURIComponent(pkg));
+          var aurData = await aurRes.json();
+          aCurrentPkgData = { name: pkg, aurInfo: aurData.resultcount > 0 ? aurData.results[0] : null, snapshots: snapshots, versions: [...new Set(snapshots.map(function(s) { return s.version; }))] };
+          if (aCurrentPkgData.aurInfo && aCurrentPkgData.versions.indexOf(aCurrentPkgData.aurInfo.Version) === -1) aCurrentPkgData.versions.push(aCurrentPkgData.aurInfo.Version);
+          aCurrentPkgData.versions.sort();
+          var oldSel = document.getElementById('a-versionOld'); var newSel = document.getElementById('a-versionNew');
+          oldSel.innerHTML = ''; newSel.innerHTML = '';
+          aCurrentPkgData.versions.forEach(function(v) { oldSel.innerHTML += '<option value="' + v + '">' + v + '</option>'; newSel.innerHTML += '<option value="' + v + '">' + v + '</option>'; });
+          if (aCurrentPkgData.versions.length >= 2) { oldSel.value = aCurrentPkgData.versions[aCurrentPkgData.versions.length - 2]; newSel.value = aCurrentPkgData.versions[aCurrentPkgData.versions.length - 1]; }
+          document.getElementById('a-version-selectors').classList.remove('hidden'); loading.classList.add('hidden');
+        } catch(e) { error.textContent = 'Error: ' + e.message; error.classList.remove('hidden'); loading.classList.add('hidden'); }
+      }
+
+      document.getElementById('a-compareBtn').addEventListener('click', aRunCompare);
+
+      async function aRunCompare() {
+        if (!aCurrentPkgData) return;
+        var vOld = document.getElementById('a-versionOld').value; var vNew = document.getElementById('a-versionNew').value;
+        var loading = document.getElementById('a-compare-loading'); var error = document.getElementById('a-compare-error'); var result = document.getElementById('a-compare-result');
+        loading.classList.remove('hidden'); error.classList.add('hidden'); result.classList.add('hidden');
+        try {
+          var oldText = null, newText = null;
+          var oldSnap = aCurrentPkgData.snapshots.find(function(s) { return s.version === vOld && s.pkgbuild_text; });
+          if (oldSnap) oldText = oldSnap.pkgbuild_text;
+          var newSnap = aCurrentPkgData.snapshots.find(function(s) { return s.version === vNew && s.pkgbuild_text; });
+          if (newSnap) newText = newSnap.pkgbuild_text;
+          if (!newText && aCurrentPkgData.aurInfo && aCurrentPkgData.aurInfo.Version === vNew) {
+            var res = await fetch(API_PREFIX + '/aur/pkgbuild/' + encodeURIComponent(aCurrentPkgData.name));
+            newText = await res.text();
+          }
+          if (!oldText && !newText) { error.textContent = 'Could not fetch PKGBUILDs.'; error.classList.remove('hidden'); loading.classList.add('hidden'); return; }
+          var diff = aComputeDiff(oldText || '', newText || '');
+          var suspicious = aDetectSuspicious(newText || '');
+          var advRes = await fetch(API_PREFIX + '/advisories?select=*&package=eq.' + encodeURIComponent(aCurrentPkgData.name), { headers: anonHeaders() });
+          var advisories = await advRes.json();
+          aRenderResult(diff, suspicious, advisories.length > 0 ? advisories[0] : null, aCurrentPkgData.name, vOld, vNew);
+          loading.classList.add('hidden');
+        } catch(e) { error.textContent = 'Error: ' + e.message; error.classList.remove('hidden'); loading.classList.add('hidden'); }
+      }
+
+      function aComputeDiff(oldText, newText) {
+        var o = oldText.split('\n'), n = newText.split('\n');
+        var result = { lines: [], stats: { added: 0, removed: 0, unchanged: 0 } };
+        var m = o.length, k = n.length;
+        var dp = Array.from({ length: m + 1 }, function() { return new Array(k + 1).fill(0); });
+        for (var i = 1; i <= m; i++) for (var j = 1; j <= k; j++) dp[i][j] = o[i-1] === n[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+        i = m; j = k; var raw = [];
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && o[i-1] === n[j-1]) { raw.unshift({ type: 'ctx', text: o[i-1] }); result.stats.unchanged++; i--; j--; }
+          else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) { raw.unshift({ type: 'add', text: n[j-1] }); result.stats.added++; j--; }
+          else { raw.unshift({ type: 'del', text: o[i-1] }); result.stats.removed++; i--; }
+        }
+        result.lines = raw; return result;
+      }
+
+      function aDetectSuspicious(text) {
+        var pats = [
+          { re: /curl\s+.*\|\s*(bash|sh)/i, label: 'curl pipe to shell', sev: 'high' },
+          { re: /wget\s+.*\|\s*(sh|bash)/i, label: 'wget pipe to shell', sev: 'high' },
+          { re: /\beval\b/i, label: 'eval', sev: 'high' },
+          { re: /rm\s+-rf\s+[\/~]/i, label: 'rm -rf', sev: 'high' },
+          { re: /npm\s+install\s+.*\|\s*(bash|sh|node)/i, label: 'npm pipe', sev: 'high' },
+          { re: /npx\s+.*\|\s*(bash|sh)/i, label: 'npx pipe', sev: 'high' },
+          { re: /\\x[0-9a-f]{2}/i, label: 'hex escape', sev: 'medium' },
+          { re: /\bbase64\s+-d/i, label: 'base64', sev: 'medium' },
+        ];
+        var findings = [];
+        text.split('\n').forEach(function(line, idx) { pats.forEach(function(p) { if (p.re.test(line)) findings.push({ line: idx + 1, label: p.label, severity: p.sev }); }); });
+        return findings;
+      }
+
+      function aRenderResult(diff, suspicious, advisory, pkg, vOld, vNew) {
+        var el = document.getElementById('a-compare-result');
+        var identical = diff.stats.added === 0 && diff.stats.removed === 0;
+        var html = '<div class="bg-surface border border-border rounded-xl p-6">';
+        html += '<div class="flex flex-wrap items-center gap-3 mb-4"><h3 class="text-xl font-heading text-white">' + pkg + '</h3>';
+        html += identical ? '<span class="verdict-badge verdict-clean">IDENTICAL</span>' : suspicious.length > 0 ? '<span class="verdict-badge verdict-advisory">CHANGES</span>' : '<span class="verdict-badge verdict-outdated">MODIFIED</span>';
+        html += '</div>';
+        html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">';
+        html += '<div><span class="text-muted-text">Old:</span> <span class="text-white">' + vOld + '</span></div>';
+        html += '<div><span class="text-muted-text">New:</span> <span class="text-white">' + vNew + '</span></div>';
+        html += '<div><span class="text-muted-text">Added:</span> <span class="text-green-400">+' + diff.stats.added + '</span></div>';
+        html += '<div><span class="text-muted-text">Removed:</span> <span class="text-red-400">-' + diff.stats.removed + '</span></div></div>';
+        if (advisory) html += '<div class="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm mb-4"><span class="text-red-400 font-bold">Advisory:</span> ' + advisory.severity.toUpperCase() + ' — ' + advisory.summary + '</div>';
+        if (suspicious.length > 0) {
+          html += '<div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-3 text-sm mb-4"><span class="text-yellow-400 font-bold">Suspicious (' + suspicious.length + '):</span><ul class="mt-1">';
+          suspicious.forEach(function(s) { html += '<li class="text-xs">[' + s.severity.toUpperCase() + '] Line ' + s.line + ': ' + s.label + '</li>'; });
+          html += '</ul></div>';
+        }
+        if (!identical) {
+          html += '<div class="border border-border rounded-lg overflow-hidden"><div class="diff-hunk">@@ Diff: ' + vOld + ' → ' + vNew + ' @@</div>';
+          diff.lines.forEach(function(line) { if (line.type === 'ctx') return; var cls = line.type === 'add' ? 'diff-add' : 'diff-del'; html += '<div class="diff-line ' + cls + '">' + (line.type === 'add' ? '+' : '-') + ' ' + line.text.replace(/</g,'&lt;') + '</div>'; });
+          html += '</div>';
+        } else { html += '<div class="text-center py-6 text-muted-text text-sm">Identical.</div>'; }
+        html += '</div>';
+        el.innerHTML = html; el.classList.remove('hidden');
+      }
+
+      // ══════════════════════════════════════════════
+      //  INACTIVITY
+      // ══════════════════════════════════════════════
+
+      function loadInactive() {
+        fetch(API_PREFIX + '/rpc/check_volunteer_inactivity', {
+          method: 'POST', headers: anonHeaders(), body: JSON.stringify({})
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('inactive-loading').classList.add('hidden');
+          if (!data || data.length === 0) { document.getElementById('inactive-empty').classList.remove('hidden'); return; }
+          var html = data.map(function(v) {
+            var lastSeen = v.last_submission ? new Date(v.last_submission).toLocaleDateString() : 'Never';
+            return '<div class="pending-card">'
+              + '<div class="flex flex-wrap items-center gap-3">'
+              + '<span class="text-white font-bold">' + v.display_name + '</span>'
+              + '<span class="text-xs text-muted-text">Last submission: ' + lastSeen + '</span>'
+              + '</div></div>';
+          }).join('');
+          document.getElementById('inactive-list').innerHTML = html;
+        }).catch(function() {
+          document.getElementById('inactive-loading').classList.add('hidden');
+          document.getElementById('inactive-empty').classList.remove('hidden');
+        });
+      }
+
+      // ══════════════════════════════════════════════
+      //  STATS
+      // ══════════════════════════════════════════════
+
+      function loadStats() {
+        Promise.all([
+          fetch(API_PREFIX + '/advisories?select=id', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(API_PREFIX + '/pending_advisories?select=id&review_status=eq.pending', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(SUPABASE_URL + '/rest/v1/profiles?select=id&role=eq.volunteer', { headers: anonHeaders() }).then(function(r) { return r.json(); }),
+          fetch(SUPABASE_URL + '/rest/v1/profiles?select=id&role=eq.maintainer', { headers: anonHeaders() }).then(function(r) { return r.json(); })
+        ]).then(function(r) {
+          document.getElementById('stat-total').textContent = r[0].length;
+          document.getElementById('stat-pending').textContent = r[1].length;
+          document.getElementById('stat-volunteers').textContent = r[2].length;
+          document.getElementById('stat-maintainers').textContent = r[3].length;
+        });
+      }
+
+      function loadVolunteerReputation() {
+        fetch(SUPABASE_URL + '/rest/v1/volunteer_reputation?select=*&order=total_submissions.desc', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          document.getElementById('admin-rep-loading').classList.add('hidden');
+          if (!data || data.length === 0) {
+            document.getElementById('admin-rep-list').innerHTML = '<div class="text-center py-4 text-muted-text">No volunteers found.</div>';
+            return;
+          }
+          var html = data.map(function(v) {
+            var tierClass = 'tier-' + (v.trust_tier || 'standard');
+            var strikesColor = (v.strikes || 0) >= 2 ? 'text-red-400' : (v.strikes || 0) >= 1 ? 'text-yellow-400' : 'text-muted-text';
+            return '<div class="vol-card">'
+              + '<div class="flex flex-wrap items-center gap-4">'
+              + '<div class="min-w-[140px]"><span class="text-white font-bold">' + (v.display_name || 'Unknown') + '</span></div>'
+              + '<div><span class="tier-badge ' + tierClass + '">' + (v.trust_tier || 'standard') + '</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Rate:</span> <span class="text-white">' + (v.approval_rate || 0) + '%</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Submitted:</span> <span class="text-white">' + (v.total_submissions || 0) + '</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Approved:</span> <span class="text-green-400">' + (v.approved || 0) + '</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Rejected:</span> <span class="text-red-400">' + (v.rejected || 0) + '</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Strikes:</span> <span class="' + strikesColor + '">' + (v.strikes || 0) + '</span></div>'
+              + '<div class="text-sm"><span class="text-muted-text">Active days:</span> <span class="text-white">' + (v.active_days || 0) + '</span></div>'
+              + '</div></div>';
+          }).join('');
+          document.getElementById('admin-rep-list').innerHTML = html;
+        });
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        supabase.auth.signOut().then(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
+      });
+    })();
+  </script>
+</MainLayout>

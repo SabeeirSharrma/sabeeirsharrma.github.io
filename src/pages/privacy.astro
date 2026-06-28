@@ -6,24 +6,123 @@ const allDocs = await getCollection('docs');
 const privacyDoc = allDocs.find(doc => doc.id === 'privacy');
 if (!privacyDoc) throw new Error('Privacy doc not found');
 
-const { Content } = await render(privacyDoc);
+const { Content, headings } = await render(privacyDoc);
+
+const h2Headings = headings
+  .filter((h: any) => h.depth === 2)
+  .map((h: any) => ({ text: h.text, id: h.slug }));
 ---
 
 <MainLayout title="Privacy Policy" description="How The Cinder Project handles your data.">
-  <div class="container mx-auto px-4 py-16 max-w-3xl">
+  <div class="legal-wrapper">
+    <aside class="legal-sidebar" data-legal-sidebar>
+      <nav>
+        <ul>
+          {h2Headings.map((h: any) => (
+            <li>
+              <a href={`#${h.id}`} class="legal-sidebar-link" data-heading-target={h.id}>
+                <span class="link-indicator"></span>
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
     <article class="legal-page">
       <Content />
     </article>
   </div>
 </MainLayout>
 
-<style>
+<style is:global>
+  .legal-wrapper {
+    display: flex;
+    gap: 2rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .legal-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 5rem;
+    align-self: flex-start;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    display: none;
+    padding-right: 1.5rem;
+    border-right: 1px solid var(--color-border);
+  }
+
+  @media (min-width: 768px) {
+    .legal-sidebar {
+      display: block;
+    }
+  }
+
+  .legal-sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .legal-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--color-muted-text);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+  }
+
+  .legal-sidebar-link:hover {
+    background: var(--color-surface);
+    color: var(--color-primary-text);
+  }
+
+  .legal-sidebar-link.active {
+    background: var(--color-cinder-dark);
+    color: var(--color-ember-light);
+    font-weight: 600;
+  }
+
+  .legal-sidebar-link .link-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-border);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .legal-sidebar-link:hover .link-indicator {
+    background: var(--color-ember-core);
+  }
+
+  .legal-sidebar-link.active .link-indicator {
+    background: var(--color-ember-core);
+    box-shadow: 0 0 8px var(--color-ember-core);
+  }
+
   .legal-page {
+    flex: 1;
+    min-width: 0;
+    max-width: 52rem;
     color: var(--color-primary-text);
     font-family: var(--font-body);
     line-height: 1.8;
   }
-  .legal-page :global(h1) {
+  .legal-page h1 {
     font-family: var(--font-heading);
     font-size: 2rem;
     font-weight: 700;
@@ -32,7 +131,7 @@ const { Content } = await render(privacyDoc);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  .legal-page :global(h2) {
+  .legal-page h2 {
     font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 600;
@@ -41,8 +140,9 @@ const { Content } = await render(privacyDoc);
     margin-bottom: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    scroll-margin-top: 6rem;
   }
-  .legal-page :global(h3) {
+  .legal-page h3 {
     font-family: var(--font-heading);
     font-size: 1rem;
     font-weight: 600;
@@ -50,37 +150,37 @@ const { Content } = await render(privacyDoc);
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
   }
-  .legal-page :global(p) {
+  .legal-page p {
     margin-bottom: 1rem;
     color: var(--color-muted-text);
   }
-  .legal-page :global(ul), .legal-page :global(ol) {
+  .legal-page ul, .legal-page ol {
     margin-bottom: 1rem;
     padding-left: 1.5rem;
   }
-  .legal-page :global(li) {
+  .legal-page li {
     margin-bottom: 0.4rem;
     color: var(--color-muted-text);
   }
-  .legal-page :global(a) {
+  .legal-page a {
     color: var(--color-ember-light);
     text-decoration: underline;
     text-underline-offset: 2px;
     transition: color 0.15s;
   }
-  .legal-page :global(a:hover) {
+  .legal-page a:hover {
     color: var(--color-ember-core);
   }
-  .legal-page :global(strong) {
+  .legal-page strong {
     color: var(--color-primary-text);
     font-weight: 600;
   }
-  .legal-page :global(hr) {
+  .legal-page hr {
     border: none;
     border-top: 1px solid var(--color-border);
     margin: 2rem 0;
   }
-  .legal-page :global(code) {
+  .legal-page code {
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: 0.85em;
     background: var(--color-card);
@@ -89,18 +189,18 @@ const { Content } = await render(privacyDoc);
     padding: 0.15em 0.4em;
     color: var(--color-ember-light);
   }
-  .legal-page :global(table) {
+  .legal-page table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 1rem;
     font-size: 0.9rem;
   }
-  .legal-page :global(th), .legal-page :global(td) {
+  .legal-page th, .legal-page td {
     border: 1px solid var(--color-border);
     padding: 0.6rem 0.8rem;
     text-align: left;
   }
-  .legal-page :global(th) {
+  .legal-page th {
     background: var(--color-card);
     font-family: var(--font-heading);
     font-weight: 600;
@@ -109,7 +209,80 @@ const { Content } = await render(privacyDoc);
     font-size: 0.75rem;
     letter-spacing: 0.05em;
   }
-  .legal-page :global(td) {
+  .legal-page td {
     color: var(--color-muted-text);
   }
 </style>
+
+<script>
+  let headingObserver: IntersectionObserver | null = null;
+
+  function cleanupObserver() {
+    if (headingObserver) {
+      headingObserver.disconnect();
+      headingObserver = null;
+    }
+  }
+
+  function initLegalSidebar() {
+    cleanupObserver();
+
+    const sidebar = document.querySelector('[data-legal-sidebar]');
+    if (!sidebar) return;
+
+    const links = sidebar.querySelectorAll<HTMLAnchorElement>('.legal-sidebar-link[data-heading-target]');
+    const h2s = document.querySelectorAll<HTMLElement>('.legal-page h2[id]');
+
+    if (h2s.length === 0) return;
+
+    links.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.dataset.headingTarget!;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          highlightLink(targetId);
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    function highlightLink(headingId: string) {
+      links.forEach(l => l.classList.remove('active'));
+      const target = sidebar.querySelector<HTMLAnchorElement>(`[data-heading-target="${headingId}"]`);
+      if (target) target.classList.add('active');
+    }
+
+    headingObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          highlightLink(entry.target.id);
+        }
+      });
+    }, {
+      threshold: 0,
+      rootMargin: '-80px 0px -70% 0px'
+    });
+
+    h2s.forEach(h2 => headingObserver!.observe(h2));
+
+    if (window.location.hash) {
+      const hash = window.location.hash.slice(1);
+      const targetEl = document.getElementById(hash);
+      if (targetEl) {
+        highlightLink(hash);
+        setTimeout(() => {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLegalSidebar);
+  } else {
+    initLegalSidebar();
+  }
+
+  document.addEventListener('astro:page-load', initLegalSidebar);
+</script>

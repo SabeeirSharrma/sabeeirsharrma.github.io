@@ -8,7 +8,7 @@ order: 1
 
 **The Cinder Project**
 *Effective Date: June 27, 2025*
-*Last Updated: June 27, 2025*
+*Last Updated: June 29, 2025*
 
 ---
 
@@ -20,7 +20,6 @@ These Terms apply to all projects under The Cinder Project umbrella, including b
 
 - **CPAC** — the Cinder Package Auditing CLI
 - **CPAC Trust DB** — the crowd-sourced package trust database
-- **CinderOS** — the Arch-based developer-focused distribution
 - The Cinder Project website at `thecinderproject.qd.je` and any associated subdomains
 
 ---
@@ -51,6 +50,10 @@ You agree not to:
 
 The CPAC Trust DB is crowd-sourced. You are responsible for the accuracy of any data you contribute. Knowingly submitting false hashes, fabricated PKGBUILDs, or misleading trust records is a violation of these Terms.
 
+Volunteers who submit advisories are subject to a reputation system. Repeated rejected submissions may result in account suspension. Volunteers with zero submissions for 30+ days may also be suspended. Suspended accounts have a 7-day appeal window via Discord.
+
+Email addresses collected for notification purposes are used solely for weekly advisory reports and account-related communications. You may request account deletion at any time.
+
 ---
 
 ## 5. Third-Party Services
@@ -63,6 +66,8 @@ The Services load resources from third-party providers. By using the Services, y
 - **Supabase** (`supabase.co`) — for read-only access to the CPAC Trust DB
 
 These third parties may collect standard HTTP metadata (IP address, User-Agent, Referrer) as part of normal network requests. The Cinder Project does not control how these third parties handle that data. Please refer to their respective privacy policies for details.
+
+Additionally, email notifications are sent via **Resend** (`resend.com`) from `no-reply@thecinderproject.qd.je`. Resend receives your email address and the content of the email. Please refer to [Resend's Privacy Policy](https://resend.com/legal/privacy-policy) for details.
 
 ---
 

@@ -8,7 +8,7 @@ order: 2
 
 **The Cinder Project**
 *Effective Date: June 27, 2025*
-*Last Updated: June 27, 2025*
+*Last Updated: June 29, 2025*
 
 ---
 
@@ -21,7 +21,7 @@ This policy applies to:
 - The Cinder Project website (`thecinderproject.qd.je` and subdomains)
 - **CPAC** — the Cinder Package Auditing CLI
 - **CPAC Trust DB** — the crowd-sourced package trust database
-- **CinderOS** and other projects under The Cinder Project umbrella
+- Other projects under The Cinder Project umbrella
 
 ---
 
@@ -41,6 +41,7 @@ When you visit the website, your browser loads resources from the following exte
 | Unpkg CDN | `unpkg.com` | All pages | Lucide icon library |
 | jsDelivr CDN | `cdn.jsdelivr.net` | Donate page only | QR code library |
 | Supabase | `*.supabase.co` | CPAC Trust DB viewer | Read-only DB access |
+| Resend | `resend.com` | Email notifications | Weekly advisory reports |
 
 **The most significant exposure is Google Fonts**, which logs your IP address and User-Agent on every page load. This is standard behaviour for any site using Google Fonts. We do not control what Google does with this data — please refer to [Google's Privacy Policy](https://policies.google.com/privacy).
 
@@ -53,9 +54,24 @@ CPAC Trust DB is a crowd-sourced database of package trust data. If you contribu
 - **Anonymized PKGBUILDs** — identifying authorship information is stripped
 - **Package hashes** — cryptographic hashes of packages you submit for trust auditing
 
-No account, email address, or personal identifier is required or collected to contribute.
+No account, email address, or personal identifier is required or collected to contribute anonymously.
 
-### 2.4 CPAC Install Scripts
+### 2.4 Volunteer/Maintainer Accounts
+
+If you create a volunteer or maintainer account, the following is collected:
+
+- **Email address** — used for weekly advisory reports and account-related communications
+- **Display name** — shown in the panel and attribution
+- **Submission history** — all advisory submissions and their review status
+- **Reputation data** — approval rate, trust tier, strike count (derived from submissions)
+
+Email addresses are sent via Resend (`resend.com`) from `no-reply@thecinderproject.qd.je`. You may request account deletion at any time.
+
+### 2.5 AI Analysis
+
+On-demand AI analysis of PKGBUILD diffs is available in the volunteer and maintainer panels. Analysis results are cached for 3 hours. No PKGBUILD content is stored permanently — only the analysis result and recommendation (safe/suspicious/malicious).
+
+### 2.6 CPAC Install Scripts
 
 CPAC install scripts check whether build dependencies are already present on your machine before proceeding with a build. This check is:
 
@@ -74,12 +90,14 @@ The donate page includes an amount input field. This value is processed **entire
 
 We do not collect:
 
-- Names, email addresses, or account credentials (no accounts exist on our platform)
-- Passwords or authentication tokens
+- Names, email addresses, or account credentials from anonymous contributors
+- Passwords or authentication tokens (accounts use Supabase Auth)
 - Payment information
 - Device fingerprints or tracking cookies
-- Crash reports or telemetry from CPAC or CinderOS
+- Crash reports or telemetry from CPAC
 - Location data beyond what is inherent in an IP address
+
+Email addresses are collected only from registered volunteers/maintainers for weekly advisory reports. Anonymous contributors provide no personal data.
 
 ---
 

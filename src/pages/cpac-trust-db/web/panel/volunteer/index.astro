@@ -30,6 +30,36 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         </div>
       </header>
 
+      <!-- Reputation Card -->
+      <div id="reputation-card" class="hidden bg-surface border border-border rounded-xl p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-6 text-sm">
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Trust Tier</span>
+            <div id="rep-tier" class="text-white font-heading text-lg">—</div>
+          </div>
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Approval Rate</span>
+            <div id="rep-rate" class="text-white font-heading text-lg">—</div>
+          </div>
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Submissions</span>
+            <div id="rep-total" class="text-white font-heading text-lg">—</div>
+          </div>
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Approved</span>
+            <div id="rep-approved" class="text-green-400 font-heading text-lg">—</div>
+          </div>
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Rejected</span>
+            <div id="rep-rejected" class="text-red-400 font-heading text-lg">—</div>
+          </div>
+          <div>
+            <span class="text-muted-text text-xs uppercase tracking-widest">Strikes</span>
+            <div id="rep-strikes" class="text-white font-heading text-lg">0</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Tabs -->
       <div class="flex gap-1 mb-8 border-b border-border">
         <button id="tab-comparer" class="tab-btn active" onclick="showTab('comparer')">Comparer</button>
@@ -37,21 +67,43 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         <button id="tab-mysubmissions" class="tab-btn" onclick="showTab('mysubmissions')">My Submissions</button>
       </div>
 
-      <!--Comparer Tab -->
+      <!-- Comparer Tab -->
       <div id="panel-comparer" class="tab-panel">
+        <!-- Step 1: Package Search -->
         <div class="bg-surface border border-border rounded-xl p-6 mb-6">
-          <h2 class="text-lg font-heading text-white mb-4 uppercase tracking-widest">Package Comparer</h2>
-          <p class="text-sm text-muted-text mb-4">Enter a package name to fetch its PKGBUILD from the AUR and compare against the trust database.</p>
-          <div class="flex gap-3">
-            <input type="text" id="comparePkg" placeholder="e.g. firefox, snapd-git"
-              class="flex-1 bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
-            <button id="compareBtn" class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
-              Compare
+          <h2 class="text-lg font-heading text-white mb-2 uppercase tracking-widest">Version Comparer</h2>
+          <p class="text-sm text-muted-text mb-4">Select a package and two versions to compare PKGBUILDs side-by-side.</p>
+
+          <div class="relative mb-4">
+            <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Package</label>
+            <input type="text" id="pkgSearch" placeholder="Start typing a package name..."
+              class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors" />
+            <div id="pkgDropdown" class="hidden absolute z-20 w-full bg-base border border-border rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg"></div>
+          </div>
+
+          <div id="version-selectors" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">Old Version</label>
+                <select id="versionOld"
+                  class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold tracking-widest uppercase text-muted-text mb-1">New Version</label>
+                <select id="versionNew"
+                  class="w-full bg-base border border-border rounded-lg px-4 py-3 text-white text-sm font-body outline-none focus:border-ember-core transition-colors">
+                </select>
+              </div>
+            </div>
+            <button id="compareBtn"
+              class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer">
+              Compare Versions
             </button>
           </div>
         </div>
 
-        <div id="compare-loading" class="hidden text-center py-8 text-muted-text">Fetching package data...</div>
+        <div id="compare-loading" class="hidden text-center py-8 text-muted-text">Fetching PKGBUILDs and computing diff...</div>
         <div id="compare-error" class="hidden bg-red-900/20 border border-red-800 rounded-xl p-4 text-red-400 text-sm mb-6"></div>
         <div id="compare-result" class="hidden"></div>
       </div>
@@ -147,17 +199,10 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
 
   <style>
     .tab-btn {
-      padding: 0.75rem 1.5rem;
-      font-family: var(--font-heading);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-size: 0.875rem;
-      color: var(--color-muted-text);
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-      cursor: pointer;
-      background: none;
+      padding: 0.75rem 1.5rem; font-family: var(--font-heading); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem;
+      color: var(--color-muted-text); border-bottom: 2px solid transparent;
+      transition: all 0.2s; cursor: pointer; background: none;
       border-top: none; border-left: none; border-right: none;
     }
     .tab-btn:hover { color: var(--color-ember-light); }
@@ -171,7 +216,6 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
     .verdict-divergent { background: #7f1d1d; color: #fca5a5; }
     .verdict-outdated { background: #713f12; color: #fde68a; }
     .verdict-unknown { background: #1e3a5f; color: #93c5fd; }
-    .verdict-mixed { background: #713f12; color: #fde68a; }
     .sub-card {
       background: var(--color-surface); border: 1px solid var(--color-border);
       border-radius: 0.5rem; padding: 1rem 1.25rem;
@@ -183,15 +227,42 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
     .review-pending { background: #713f12; color: #fde68a; }
     .review-approved { background: #14532d; color: #86efac; }
     .review-rejected { background: #7f1d1d; color: #fca5a5; }
+    .pkg-option {
+      padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem;
+      color: var(--color-muted-text); transition: background 0.15s;
+    }
+    .pkg-option:hover { background: var(--color-surface); color: var(--color-white); }
+    .diff-line { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; padding: 0.1rem 0.5rem; white-space: pre-wrap; word-break: break-all; }
+    .diff-add { background: #14532d40; color: #86efac; }
+    .diff-del { background: #7f1d1d40; color: #fca5a5; }
+    .diff-ctx { color: var(--color-muted-text); }
+    .diff-hunk { color: var(--color-ember-core); font-weight: 600; font-size: 0.75rem; padding: 0.3rem 0.5rem; background: var(--color-surface); }
+    .suspicious-highlight { background: #f59e0b30; border-left: 3px solid #f59e0b; }
+    .ai-badge {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .ai-safe { background: #14532d; color: #86efac; }
+    .ai-suspicious { background: #713f12; color: #fde68a; }
+    .ai-malicious { background: #7f1d1d; color: #fca5a5; }
+    .tier-trusted { color: #86efac; }
+    .tier-standard { color: #93c5fd; }
+    .tier-probation { color: #fde68a; }
+    .tier-suspended { color: #fca5a5; }
   </style>
 
   <script is:inline>
     (function() {
+      var WORKER_BASE = 'https://api.thecinderproject.qd.je';
+      var API_PREFIX = WORKER_BASE + '/cpac-trust-db/api';
       var SUPABASE_URL = 'https://qzhhsyucnlswmsvpssdh.supabase.co';
       var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6aGhzeXVjbmxzd21zdnBzc2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NDQsImV4cCI6MjA5ODA0NzU0NH0.sIQobt0xfnMsgthGLJUb1S8f1yisDcavtRoWzi7y4OA';
       var supabase = null;
       var currentUser = null;
       var userProfile = null;
+      var searchTimeout = null;
+      var currentPkgData = null;
+      var currentSnapshots = [];
 
       var script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
@@ -205,10 +276,7 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
 
       function checkAuth() {
         supabase.auth.getSession().then(function(result) {
-          if (!result.data.session) {
-            window.location.href = '/cpac-trust-db/web/panel/login/';
-            return;
-          }
+          if (!result.data.session) { window.location.href = '/cpac-trust-db/web/panel/login/'; return; }
           currentUser = result.data.session.user;
           loadProfile();
         });
@@ -219,31 +287,21 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
         }).then(function(r) { return r.json(); }).then(function(data) {
           if (!data || data.length === 0 || data[0].role !== 'volunteer') {
-            window.location.href = '/cpac-trust-db/web/panel/login/';
-            return;
+            window.location.href = '/cpac-trust-db/web/panel/login/'; return;
           }
           userProfile = data[0];
           document.getElementById('auth-gate').classList.add('hidden');
           document.getElementById('dashboard').classList.remove('hidden');
           loadDailyCount();
           loadSubmissions();
-        }).catch(function() {
-          window.location.href = '/cpac-trust-db/web/panel/login/';
-        });
+          loadReputation();
+        }).catch(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
       }
 
       function authHeaders() {
-        return {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + currentUser.id,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        };
+        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentUser.id, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
       }
-
-      function anonHeaders() {
-        return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
-      }
+      function anonHeaders() { return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }; }
 
       // ── Daily count ──
       function loadDailyCount() {
@@ -251,8 +309,35 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         fetch(SUPABASE_URL + '/rest/v1/daily_submission_counts?submitted_by=eq.' + currentUser.id + '&day=eq.' + today + '&select=count', {
           headers: anonHeaders()
         }).then(function(r) { return r.json(); }).then(function(data) {
-          var count = (data && data.length > 0) ? data[0].count : 0;
-          document.getElementById('daily-count').textContent = count + '/5';
+          document.getElementById('daily-count').textContent = ((data && data.length > 0) ? data[0].count : 0) + '/5';
+        });
+      }
+
+      // ── Reputation stats ──
+      function loadReputation() {
+        fetch(SUPABASE_URL + '/rest/v1/volunteer_reputation?id=eq.' + currentUser.id + '&select=*', {
+          headers: anonHeaders()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (!data || data.length === 0) return;
+          var rep = data[0];
+          var card = document.getElementById('reputation-card');
+          card.classList.remove('hidden');
+
+          var tier = rep.trust_tier || 'standard';
+          var tierEl = document.getElementById('rep-tier');
+          tierEl.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+          tierEl.className = 'font-heading text-lg tier-' + tier;
+
+          document.getElementById('rep-rate').textContent = (rep.approval_rate || 0) + '%';
+          document.getElementById('rep-total').textContent = rep.total_submissions || 0;
+          document.getElementById('rep-approved').textContent = rep.approved || 0;
+          document.getElementById('rep-rejected').textContent = rep.rejected || 0;
+
+          var strikesEl = document.getElementById('rep-strikes');
+          strikesEl.textContent = rep.strikes || 0;
+          if ((rep.strikes || 0) >= 2) strikesEl.className = 'font-heading text-lg text-red-400';
+          else if ((rep.strikes || 0) >= 1) strikesEl.className = 'font-heading text-lg text-yellow-400';
+          else strikesEl.className = 'font-heading text-lg text-white';
         });
       }
 
@@ -264,24 +349,144 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         document.getElementById('tab-' + name).classList.add('active');
       };
 
-      // ──Comparer ──
-      document.getElementById('compareBtn').addEventListener('click', runCompare);
-      document.getElementById('comparePkg').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); runCompare(); }
+      // ══════════════════════════════════════════════
+      //  COMPARER — Version-focused redesign
+      // ══════════════════════════════════════════════
+
+      var pkgSearch = document.getElementById('pkgSearch');
+      var pkgDropdown = document.getElementById('pkgDropdown');
+
+      // Package search with autocomplete from DB + AUR
+      pkgSearch.addEventListener('input', function() {
+        var q = pkgSearch.value.trim();
+        clearTimeout(searchTimeout);
+        if (q.length < 2) { pkgDropdown.classList.add('hidden'); return; }
+        searchTimeout = setTimeout(function() { searchPackages(q); }, 300);
       });
 
-      async function sha256(text) {
-        var encoder = new TextEncoder();
-        var data = encoder.encode(text);
-        var hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        var hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+      pkgSearch.addEventListener('focus', function() {
+        if (pkgDropdown.children.length > 0 && pkgSearch.value.trim().length >= 2) {
+          pkgDropdown.classList.remove('hidden');
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!pkgSearch.contains(e.target) && !pkgDropdown.contains(e.target)) {
+          pkgDropdown.classList.add('hidden');
+        }
+      });
+
+      async function searchPackages(q) {
+        var html = '';
+        // Search local DB snapshots for unique package names
+        try {
+          var snapRes = await fetch(API_PREFIX + '/snapshots?select=package&package=like.' + encodeURIComponent(q) + '*&limit=10', { headers: anonHeaders() });
+          var snaps = await snapRes.json();
+          var dbPkgs = [...new Set(snaps.map(function(s) { return s.package; }))];
+          dbPkgs.forEach(function(p) {
+            html += '<div class="pkg-option" data-pkg="' + p + '" data-source="db">' + p + ' <span class="text-xs text-muted-text">(in DB)</span></div>';
+          });
+        } catch(e) {}
+
+        // Also search AUR
+        try {
+          var aurRes = await fetch(API_PREFIX + '/aur/info/' + encodeURIComponent(q));
+          var aurData = await aurRes.json();
+          if (aurData.results) {
+            aurData.results.slice(0, 5).forEach(function(r) {
+              if (!dbPkgs || dbPkgs.indexOf(r.Name) === -1) {
+                html += '<div class="pkg-option" data-pkg="' + r.Name + '" data-source="aur">' + r.Name + ' <span class="text-xs text-muted-text">(AUR)</span></div>';
+              }
+            });
+          }
+        } catch(e) {}
+
+        if (!html) { html = '<div class="pkg-option text-muted-text">No results found</div>'; }
+        pkgDropdown.innerHTML = html;
+        pkgDropdown.classList.remove('hidden');
+
+        pkgDropdown.querySelectorAll('.pkg-option[data-pkg]').forEach(function(opt) {
+          opt.addEventListener('click', function() {
+            selectPackage(opt.dataset.pkg);
+            pkgDropdown.classList.add('hidden');
+          });
+        });
       }
 
-      async function runCompare() {
-        var pkg = document.getElementById('comparePkg').value.trim();
-        if (!pkg) return;
+      async function selectPackage(pkg) {
+        pkgSearch.value = pkg;
+        var loading = document.getElementById('compare-loading');
+        var error = document.getElementById('compare-error');
+        loading.classList.remove('hidden');
+        error.classList.add('hidden');
 
+        try {
+          // Fetch snapshots from DB
+          var snapRes = await fetch(API_PREFIX + '/snapshots?select=*&package=eq.' + encodeURIComponent(pkg), { headers: anonHeaders() });
+          currentSnapshots = await snapRes.json();
+
+          // Fetch AUR info for current version
+          var aurRes = await fetch(API_PREFIX + '/aur/info/' + encodeURIComponent(pkg));
+          var aurData = await aurRes.json();
+
+          if (aurData.resultcount === 0 && currentSnapshots.length === 0) {
+            error.textContent = 'Package not found in AUR or trust DB: ' + pkg;
+            error.classList.remove('hidden');
+            loading.classList.add('hidden');
+            return;
+          }
+
+          currentPkgData = {
+            name: pkg,
+            aurInfo: aurData.resultcount > 0 ? aurData.results[0] : null,
+            snapshots: currentSnapshots,
+            versions: [...new Set(currentSnapshots.map(function(s) { return s.version; }))]
+          };
+
+          // If AUR has a version not in DB, add it
+          if (currentPkgData.aurInfo && currentPkgData.versions.indexOf(currentPkgData.aurInfo.Version) === -1) {
+            currentPkgData.versions.push(currentPkgData.aurInfo.Version);
+          }
+          currentPkgData.versions.sort();
+
+          populateVersionSelectors(currentPkgData);
+          document.getElementById('version-selectors').classList.remove('hidden');
+          loading.classList.add('hidden');
+        } catch(e) {
+          error.textContent = 'Error loading package: ' + e.message;
+          error.classList.remove('hidden');
+          loading.classList.add('hidden');
+        }
+      }
+
+      function populateVersionSelectors(data) {
+        var oldSel = document.getElementById('versionOld');
+        var newSel = document.getElementById('versionNew');
+        oldSel.innerHTML = '';
+        newSel.innerHTML = '';
+
+        data.versions.forEach(function(v) {
+          oldSel.innerHTML += '<option value="' + v + '">' + v + '</option>';
+          newSel.innerHTML += '<option value="' + v + '">' + v + '</option>';
+        });
+
+        // Default: old = second-to-last, new = last (AUR version)
+        if (data.versions.length >= 2) {
+          oldSel.value = data.versions[data.versions.length - 2];
+          newSel.value = data.versions[data.versions.length - 1];
+        } else if (data.versions.length === 1) {
+          oldSel.value = data.versions[0];
+          newSel.value = data.versions[0];
+        }
+      }
+
+      // Compare button
+      document.getElementById('compareBtn').addEventListener('click', runCompare);
+
+      async function runCompare() {
+        if (!currentPkgData) return;
+        var vOld = document.getElementById('versionOld').value;
+        var vNew = document.getElementById('versionNew').value;
         var loading = document.getElementById('compare-loading');
         var error = document.getElementById('compare-error');
         var result = document.getElementById('compare-result');
@@ -291,181 +496,345 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         result.classList.add('hidden');
 
         try {
-          // 1. Fetch PKGBUILD from AUR
-          var aurRes = await fetch('https://aur.archlinux.org/rpc/v5/info/' + pkg);
-          var aurData = await aurRes.json();
+          // Fetch old PKGBUILD: from DB snapshot if available, else AUR
+          var oldText = await fetchPkgbuild(currentPkgData.name, vOld, currentPkgData);
+          var newText = await fetchPkgbuild(currentPkgData.name, vNew, currentPkgData);
 
-          if (aurData.resultcount === 0) {
-            error.textContent = 'Package not found on AUR: ' + pkg;
+          if (!oldText && !newText) {
+            error.textContent = 'Could not fetch PKGBUILDs for either version.';
             error.classList.remove('hidden');
             loading.classList.add('hidden');
             return;
           }
 
-          var pkgInfo = aurData.results[0];
-          var pkgbuildUrl = 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=' + pkg;
-          var pkgbuildRes = await fetch(pkgbuildUrl);
-          var pkgbuildText = await pkgbuildRes.text();
-          var pkgHash = await sha256(pkgbuildText);
+          var oldHash = oldText ? await sha256(oldText) : null;
+          var newHash = newText ? await sha256(newText) : null;
 
-          // 2. Fetch trust DB data
-          var [snapRes, advRes] = await Promise.all([
-            fetch(SUPABASE_URL + '/rest/v1/snapshots?select=*&package=eq.' + pkg, { headers: anonHeaders() }),
-            fetch(SUPABASE_URL + '/rest/v1/advisories?select=*&package=eq.' + pkg, { headers: anonHeaders() })
-          ]);
-          var snapshots = await snapRes.json();
+          // Compute diff
+          var diff = computeDiff(oldText || '', newText || '', vOld, vNew);
+
+          // Detect suspicious patterns
+          var suspicious = detectSuspicious(newText || '');
+
+          // Check advisories
+          var advRes = await fetch(API_PREFIX + '/advisories?select=*&package=eq.' + encodeURIComponent(currentPkgData.name), { headers: anonHeaders() });
           var advisories = await advRes.json();
+          var advisory = advisories.length > 0 ? advisories[0] : null;
 
-          // 3. Run comparison logic
-          var report = computeReport(pkg, pkgInfo, pkgHash, snapshots, advisories);
+          renderDiffResult(diff, suspicious, advisory, {
+            pkg: currentPkgData.name, vOld: vOld, vNew: vNew,
+            oldHash: oldHash, newHash: newHash,
+            oldText: oldText, newText: newText
+          });
 
-          // 4. Render result
-          renderCompareResult(report, pkgInfo);
           loading.classList.add('hidden');
-        } catch (e) {
-          error.textContent = 'Error: ' + (e.message || 'Failed to fetch package data');
+        } catch(e) {
+          error.textContent = 'Comparison error: ' + e.message;
           error.classList.remove('hidden');
           loading.classList.add('hidden');
         }
       }
 
-      function computeReport(pkg, pkgInfo, pkgHash, snapshots, advisories) {
-        var version = pkgInfo.Version;
-        var advisory = advisories.length > 0 ? advisories[0] : null;
+      async function fetchPkgbuild(pkg, version, data) {
+        // Try DB snapshot first (has pkgbuild_text)
+        var snap = data.snapshots.find(function(s) { return s.version === version && s.pkgbuild_text; });
+        if (snap && snap.pkgbuild_text) return snap.pkgbuild_text;
 
-        // Version intelligence
-        var knownVersions = [...new Set(snapshots.map(function(s) { return s.version; }))].sort();
-        var latestKnown = knownVersions.length > 0 ? knownVersions[knownVersions.length - 1] : null;
-        var isLatest = latestKnown === version;
-        var isOutdated = latestKnown !== null && version !== latestKnown;
-        var isUnknownVersion = knownVersions.indexOf(version) === -1;
-
-        // Hash intelligence
-        var versionSnaps = snapshots.filter(function(s) { return s.version === version; });
-        var totalSubs = versionSnaps.reduce(function(sum, s) { return sum + s.submitted_count; }, 0);
-        var majority = versionSnaps.length > 0
-          ? versionSnaps.reduce(function(max, s) { return s.submitted_count > max.submitted_count ? s : max; })
-          : null;
-        var majorityHash = majority ? majority.sha256 : '';
-        var majoritySubs = majority ? majority.submitted_count : 0;
-        var matchesConsensus = majorityHash === pkgHash;
-        var hashKnown = versionSnaps.some(function(s) { return s.sha256 === pkgHash; });
-        var hashSubs = versionSnaps.filter(function(s) { return s.sha256 === pkgHash; })
-          .reduce(function(sum, s) { return sum + s.submitted_count; }, 0);
-
-        // Advisory check
-        var affectedVersions = advisory ? (advisory.affected_versions || []) : [];
-        var safeVersions = advisory ? (advisory.safe_versions || []) : [];
-        var versionAffected = affectedVersions.indexOf(version) !== -1;
-        var versionSafe = safeVersions.indexOf(version) !== -1;
-
-        // Verdict
-        var concerns = [];
-        var adjustments = [];
-
-        if (versionAffected && advisory) {
-          var penalty = { critical: -30, high: -20, medium: -10, low: -5 }[advisory.severity] || 0;
-          adjustments.push(penalty);
-          concerns.push('Version ' + version + ' affected by ' + advisory.severity + ' advisory: ' + advisory.summary);
-        } else if (versionSafe) {
-          adjustments.push(10);
+        // Check if this is the AUR version
+        if (data.aurInfo && data.aurInfo.Version === version) {
+          try {
+            var res = await fetch(API_PREFIX + '/aur/pkgbuild/' + encodeURIComponent(pkg));
+            var text = await res.text();
+            if (text && text.length > 10 && text.indexOf('#') !== -1) return text;
+          } catch(e) {}
         }
 
-        if (totalSubs > 0) {
-          if (matchesConsensus) {
-            adjustments.push(totalSubs >= 5 ? 5 : 2);
+        // Fallback: AUR may have this version in snapshot history
+        var snapAny = data.snapshots.find(function(s) { return s.version === version && s.pkgbuild_text; });
+        if (snapAny) return snapAny.pkgbuild_text;
+
+        return null;
+      }
+
+      function computeDiff(oldText, newText, vOld, vNew) {
+        var oldLines = oldText.split('\n');
+        var newLines = newText.split('\n');
+        var result = { lines: [], stats: { added: 0, removed: 0, unchanged: 0 } };
+
+        // Simple LCS-based diff
+        var lcs = lcsMatrix(oldLines, newLines);
+        var i = oldLines.length, j = newLines.length;
+        var rawDiff = [];
+
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && oldLines[i-1] === newLines[j-1]) {
+            rawDiff.unshift({ type: 'ctx', oldNum: i, newNum: j, text: oldLines[i-1] });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || lcs[i][j-1] >= lcs[i-1][j])) {
+            rawDiff.unshift({ type: 'add', newNum: j, text: newLines[j-1] });
+            result.stats.added++;
+            j--;
           } else {
-            adjustments.push(-15);
-            concerns.push(hashKnown
-              ? 'Your hash has ' + hashSubs + ' submissions, majority has ' + majoritySubs
-              : 'Your PKGBUILD hash is not in any known snapshots');
+            rawDiff.unshift({ type: 'del', oldNum: i, text: oldLines[i-1] });
+            result.stats.removed++;
+            i--;
           }
         }
 
-        if (isOutdated) {
-          adjustments.push(-5);
-          concerns.push('Newer version is known in the trust DB');
-        }
-
-        var advisoryConcern = versionAffected;
-        var consensusConcern = totalSubs > 0 && !matchesConsensus;
-        var outdatedConcern = isOutdated;
-        var unknownConcern = isUnknownVersion && totalSubs === 0;
-
-        var verdict;
-        if (advisoryConcern) verdict = 'advisory';
-        else if (consensusConcern) verdict = 'divergent';
-        else if (outdatedConcern) verdict = 'outdated';
-        else if (unknownConcern) verdict = 'unknown';
-        else verdict = 'clean';
-
-        var totalAdj = adjustments.reduce(function(a, b) { return a + b; }, 0);
-
-        var explanation;
-        if (concerns.length > 0) {
-          explanation = concerns.join('; ');
-        } else if (totalSubs === 0) {
-          explanation = 'No community data yet for ' + pkg + ' ' + version + ' — first submission';
-        } else if (matchesConsensus) {
-          explanation = 'Matches community consensus (' + hashSubs + ' submissions for this hash)';
-        } else {
-          explanation = 'Version ' + version + ' — no concerns detected';
-        }
-
-        return {
-          package: pkg, version: version, hash: pkgHash, pkgbuildText: pkgbuildText,
-          latestKnown: latestKnown, knownVersions: knownVersions, isLatest: isLatest,
-          isOutdated: isOutdated, isUnknownVersion: isUnknownVersion,
-          hashKnown: hashKnown, hashSubs: hashSubs, matchesConsensus: matchesConsensus,
-          majorityHash: majorityHash, majoritySubs: majoritySubs, totalSubs: totalSubs,
-          advisory: advisory, versionAffected: versionAffected, versionSafe: versionSafe,
-          verdict: verdict, scoreAdjustment: totalAdj, explanation: explanation
-        };
+        // Context lines don't count as unchanged in stats
+        result.stats.unchanged = rawDiff.filter(function(l) { return l.type === 'ctx'; }).length;
+        result.lines = rawDiff;
+        return result;
       }
 
-      function renderCompareResult(r, pkgInfo) {
-        var verdictColors = { clean: 'verdict-clean', advisory: 'verdict-advisory', divergent: 'verdict-divergent', outdated: 'verdict-outdated', unknown: 'verdict-unknown' };
-        var adjColor = r.scoreAdjustment >= 0 ? 'text-green-400' : 'text-red-400';
-        var adjSign = r.scoreAdjustment >= 0 ? '+' : '';
+      function lcsMatrix(a, b) {
+        var m = a.length, n = b.length;
+        var dp = Array.from({ length: m + 1 }, function() { return new Array(n + 1).fill(0); });
+        for (var i = 1; i <= m; i++) {
+          for (var j = 1; j <= n; j++) {
+            dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+          }
+        }
+        return dp;
+      }
 
-        var html = '<div class="bg-surface border border-border rounded-xl p-6">'
-          + '<div class="flex flex-wrap items-center gap-3 mb-4">'
-          + '<h3 class="text-xl font-heading text-white">' + r.package + '</h3>'
-          + '<span class="verdict-badge ' + (verdictColors[r.verdict] || 'verdict-unknown') + '">' + r.verdict.toUpperCase() + '</span>'
-          + '</div>'
+      // Suspicious patterns (mirrors sanitize.rs Pass 2)
+      var SUSPICIOUS_PATTERNS = [
+        { re: /curl\s+.*\|\s*(bash|sh)/i, label: 'Remote script via curl pipe', severity: 'high' },
+        { re: /wget\s+.*\|\s*(sh|bash)/i, label: 'Remote script via wget pipe', severity: 'high' },
+        { re: /fetch\s+.*\|\s*sh/i, label: 'Remote script via fetch pipe', severity: 'high' },
+        { re: /\bbase64\s+-d/i, label: 'Base64 decode', severity: 'medium' },
+        { re: /\\x[0-9a-f]{2}/i, label: 'Hex escape sequence', severity: 'medium' },
+        { re: /\beval\b/i, label: 'eval usage', severity: 'high' },
+        { re: /\bexec\b/i, label: 'exec usage', severity: 'medium' },
+        { re: /rm\s+-rf\s+[\/~]/i, label: 'Aggressive file removal', severity: 'high' },
+        { re: /npm\s+install\s+.*\|\s*(bash|sh|node)/i, label: 'npm install pipe to shell', severity: 'high' },
+        { re: /bun\s+install\s+.*\|\s*(bash|sh|node)/i, label: 'bun install pipe to shell', severity: 'high' },
+        { re: /npx\s+.*\|\s*(bash|sh)/i, label: 'npx pipe to shell', severity: 'high' },
+        { re: /curl\s+.*\|\s*npx/i, label: 'curl pipe to npx', severity: 'high' },
+        { re: /wget\s+.*\|\s*npx/i, label: 'wget pipe to npx', severity: 'high' },
+        { re: /\beval\s*\(\s*.*base64/i, label: 'eval + base64', severity: 'critical' },
+        { re: /\bexport\s+PATH\s*=/i, label: 'PATH modification', severity: 'low' },
+        { re: /pacman\s+-S\b/i, label: 'pacman install in build', severity: 'low' },
+      ];
 
-          + '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">'
-          + '<div><span class="text-muted-text">Version:</span> <span class="text-white">' + r.version + '</span></div>'
-          + '<div><span class="text-muted-text">Maintainer:</span> <span class="text-white">' + (pkgInfo.Maintainer || 'N/A') + '</span></div>'
-          + '<div><span class="text-muted-text">Hash:</span> <span class="text-white font-mono text-xs">' + r.hash.substring(0, 16) + '...</span></div>'
-          + '<div><span class="text-muted-text">Adjustment:</span> <span class="' + adjColor + ' font-bold">' + adjSign + r.scoreAdjustment + '</span></div>'
-          + '</div>'
+      function detectSuspicious(text) {
+        var lines = text.split('\n');
+        var findings = [];
+        lines.forEach(function(line, idx) {
+          SUSPICIOUS_PATTERNS.forEach(function(p) {
+            if (p.re.test(line)) {
+              findings.push({ line: idx + 1, text: line.trim(), label: p.label, severity: p.severity });
+            }
+          });
+        });
+        return findings;
+      }
 
-          + '<div class="text-sm text-muted-text mb-4">' + r.explanation + '</div>';
+      function renderDiffResult(diff, suspicious, advisory, ctx) {
+        var el = document.getElementById('compare-result');
+        var identical = diff.stats.added === 0 && diff.stats.removed === 0;
 
-        if (r.advisory) {
-          html += '<div class="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm mb-4">'
-            + '<span class="text-red-400 font-bold">Active Advisory:</span> <span class="text-white">' + r.advisory.severity.toUpperCase() + '</span> — '
-            + r.advisory.summary
-            + '</div>';
+        var html = '<div class="bg-surface border border-border rounded-xl p-6 mb-6">';
+
+        // Header
+        html += '<div class="flex flex-wrap items-center gap-3 mb-4">';
+        html += '<h3 class="text-xl font-heading text-white">' + ctx.pkg + '</h3>';
+        if (identical) {
+          html += '<span class="verdict-badge verdict-clean">IDENTICAL</span>';
+        } else if (suspicious.length > 0) {
+          html += '<span class="verdict-badge verdict-advisory">CHANGES DETECTED</span>';
+        } else {
+          html += '<span class="verdict-badge verdict-outdated">MODIFIED</span>';
+        }
+        html += '</div>';
+
+        // Stats
+        html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">';
+        html += '<div><span class="text-muted-text">Old:</span> <span class="text-white">' + ctx.vOld + '</span></div>';
+        html += '<div><span class="text-muted-text">New:</span> <span class="text-white">' + ctx.vNew + '</span></div>';
+        html += '<div><span class="text-muted-text">Lines added:</span> <span class="text-green-400">+' + diff.stats.added + '</span></div>';
+        html += '<div><span class="text-muted-text">Lines removed:</span> <span class="text-red-400">-' + diff.stats.removed + '</span></div>';
+        html += '</div>';
+
+        // Hashes
+        if (ctx.oldHash || ctx.newHash) {
+          html += '<div class="text-xs text-muted-text mb-4 font-mono">';
+          if (ctx.oldHash) html += 'Old SHA-256: ' + ctx.oldHash.substring(0, 32) + '...<br>';
+          if (ctx.newHash) html += 'New SHA-256: ' + ctx.newHash.substring(0, 32) + '...';
+          html += '</div>';
         }
 
-        html += '<button onclick="fillFromCompare(\'' + r.package + '\',\'' + r.version + '\',\'' + (r.advisory ? r.advisory.severity : 'medium') + '\',\'' + (r.advisory ? r.advisory.status : 'suspected') + '\')" '
+        // Advisory warning
+        if (advisory) {
+          html += '<div class="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm mb-4">'
+            + '<span class="text-red-400 font-bold">Active Advisory:</span> <span class="text-white">' + advisory.severity.toUpperCase() + '</span> — '
+            + advisory.summary + '</div>';
+        }
+
+        // Suspicious patterns
+        if (suspicious.length > 0) {
+          html += '<div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-3 text-sm mb-4">';
+          html += '<span class="text-yellow-400 font-bold">Suspicious Patterns (' + suspicious.length + '):</span>';
+          html += '<ul class="mt-2 space-y-1">';
+          suspicious.forEach(function(s) {
+            var sevColor = s.severity === 'critical' ? 'text-red-400' : s.severity === 'high' ? 'text-orange-400' : 'text-yellow-400';
+            html += '<li class="text-xs"><span class="' + sevColor + '">[' + s.severity.toUpperCase() + ']</span> Line ' + s.line + ': ' + s.label + '</li>';
+          });
+          html += '</ul></div>';
+        }
+
+        // AI Analysis button
+        html += '<div class="flex gap-3 mb-4">';
+        html += '<button id="aiAnalyzeBtn" onclick="runAiAnalysis()" '
+          + 'class="bg-cinder-mid hover:bg-cinder-dark text-white font-heading font-bold uppercase tracking-widest text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer">'
+          + 'Analyze with AI</button>';
+        html += '<button onclick="runCompare()" '
+          + 'class="bg-surface hover:bg-elevated text-muted-text font-heading font-bold uppercase tracking-widest text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer border border-border">'
+          + 'Recompare</button>';
+        html += '</div>';
+
+        html += '<div id="ai-result" class="hidden"></div>';
+
+        // Diff view
+        if (!identical) {
+          html += '<div class="mt-4 border border-border rounded-lg overflow-hidden">';
+          html += '<div class="diff-hunk">@@ PKGBUILD Diff: ' + ctx.vOld + ' → ' + ctx.vNew + ' @@</div>';
+          var maxShow = 500;
+          var shown = 0;
+          diff.lines.forEach(function(line) {
+            if (shown >= maxShow) return;
+            if (line.type === 'ctx') return; // skip context for brevity
+            var cls = line.type === 'add' ? 'diff-add' : 'diff-del';
+            var prefix = line.type === 'add' ? '+' : '-';
+            var lineNum = line.type === 'add' ? line.newNum : line.oldNum;
+            var isSuspicious = suspicious.some(function(s) { return s.line === lineNum; });
+            html += '<div class="diff-line ' + cls + (isSuspicious ? ' suspicious-highlight' : '') + '">'
+              + prefix + ' ' + escapeHtml(line.text) + '</div>';
+            shown++;
+          });
+          if (diff.lines.length > maxShow) {
+            html += '<div class="diff-line diff-ctx">... ' + (diff.lines.length - maxShow) + ' more lines (showing first ' + maxShow + ')</div>';
+          }
+          html += '</div>';
+        } else {
+          html += '<div class="text-center py-6 text-muted-text text-sm">PKGBUILDs are identical — no changes detected.</div>';
+        }
+
+        // Submit as advisory
+        html += '<div class="mt-4">';
+        html += '<button onclick="fillFromCompare(\'' + ctx.pkg + '\',\'' + ctx.vNew + '\')" '
           + 'class="bg-ember-core hover:bg-ember-deep text-white font-heading font-bold uppercase tracking-widest text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer">'
           + 'Submit as Advisory</button>';
+        html += '</div>';
 
         html += '</div>';
-        document.getElementById('compare-result').innerHTML = html;
-        document.getElementById('compare-result').classList.remove('hidden');
+        el.innerHTML = html;
+        el.classList.remove('hidden');
+
+        // Store for AI analysis
+        el.dataset.pkg = ctx.pkg;
+        el.dataset.vOld = ctx.vOld;
+        el.dataset.vNew = ctx.vNew;
+        el.dataset.newText = ctx.newText || '';
+        el.dataset.oldText = ctx.oldText || '';
       }
 
-      window.fillFromCompare = function(pkg, version, severity, status) {
+      function escapeHtml(t) {
+        return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      window.fillFromCompare = function(pkg, version) {
         document.getElementById('f-package').value = pkg;
-        document.getElementById('f-severity').value = severity;
-        document.getElementById('f-status').value = status;
-        document.getElementById('f-summary').value = 'Suspicious activity detected for ' + pkg + ' ' + version;
+        document.getElementById('f-severity').value = 'medium';
+        document.getElementById('f-status').value = 'suspected';
+        document.getElementById('f-summary').value = 'Suspicious changes detected in ' + pkg + ' ' + version;
         showTab('submit');
       };
+
+      // ══════════════════════════════════════════════
+      //  AI Analysis — on-demand, 3-hour cache
+      // ══════════════════════════════════════════════
+
+      window.runAiAnalysis = async function() {
+        var btn = document.getElementById('aiAnalyzeBtn');
+        var resultEl = document.getElementById('ai-result');
+        var el = document.getElementById('compare-result');
+        var pkg = el.dataset.pkg;
+        var vOld = el.dataset.vOld;
+        var vNew = el.dataset.vNew;
+        var newText = el.dataset.newText;
+        var oldText = el.dataset.oldText;
+
+        btn.textContent = 'Analyzing...';
+        btn.disabled = true;
+        resultEl.classList.remove('hidden');
+        resultEl.innerHTML = '<div class="text-muted-text text-sm">Checking cache...</div>';
+
+        try {
+          var diffHash = await sha256((oldText || '') + '---' + (newText || ''));
+
+          // Check cache first
+          var cacheRes = await fetch(API_PREFIX + '/ai_analysis?select=*&package=eq.' + encodeURIComponent(pkg)
+            + '&version_old=eq.' + encodeURIComponent(vOld)
+            + '&version_new=eq.' + encodeURIComponent(vNew)
+            + '&diff_hash=eq.' + diffHash
+            + '&expires_at=gt.' + new Date().toISOString(), { headers: anonHeaders() });
+          var cached = await cacheRes.json();
+
+          if (cached && cached.length > 0) {
+            renderAiResult(cached[0].analysis, cached[0].recommendation, true);
+            btn.textContent = 'Analyze with AI';
+            btn.disabled = false;
+            return;
+          }
+
+          resultEl.innerHTML = '<div class="text-muted-text text-sm">Running AI analysis...</div>';
+
+          // Build analysis prompt
+          var prompt = 'Analyze this PKGBUILD diff for security concerns. Package: ' + pkg + ', versions ' + vOld + ' → ' + vNew + '.\n\n';
+          if (oldText) prompt += 'OLD PKGBUILD:\n' + oldText.substring(0, 3000) + '\n\n';
+          if (newText) prompt += 'NEW PKGBUILD:\n' + newText.substring(0, 3000) + '\n\n';
+          prompt += 'Respond with JSON: {"recommendation": "safe|suspicious|malicious", "analysis": "brief explanation"}';
+
+          // Call AI via a simple proxy endpoint (or direct if provider allows CORS)
+          // For now, store as pending and show a placeholder
+          // In production, this would call an AI API endpoint on the Worker
+          var analysis = 'AI analysis is not yet connected. This feature requires an AI provider API key to be configured on the backend. The diff shows ' + (newText ? newText.split('\n').length : 0) + ' lines in the new PKGBUILD.';
+          var recommendation = 'suspicious';
+
+          // Store in cache
+          await fetch(API_PREFIX + '/ai_analysis', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              package: pkg, version_old: vOld, version_new: vNew,
+              diff_hash: diffHash, analysis: analysis, recommendation: recommendation,
+              expires_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString()
+            })
+          });
+
+          renderAiResult(analysis, recommendation, false);
+        } catch(e) {
+          resultEl.innerHTML = '<div class="text-red-400 text-sm">AI analysis failed: ' + e.message + '</div>';
+        }
+
+        btn.textContent = 'Analyze with AI';
+        btn.disabled = false;
+      };
+
+      function renderAiResult(analysis, recommendation, fromCache) {
+        var el = document.getElementById('ai-result');
+        var badgeClass = 'ai-' + recommendation;
+        var html = '<div class="bg-surface border border-border rounded-lg p-4 mt-2">'
+          + '<div class="flex items-center gap-2 mb-2">'
+          + '<span class="ai-badge ' + badgeClass + '">' + recommendation.toUpperCase() + '</span>'
+          + '<span class="text-xs text-muted-text">' + (fromCache ? '(cached, < 3 hours)' : '(fresh analysis)') + '</span>'
+          + '</div>'
+          + '<p class="text-sm text-muted-text">' + escapeHtml(analysis) + '</p>'
+          + '</div>';
+        el.innerHTML = html;
+      }
 
       // ── Submit form ──
       document.getElementById('submitForm').addEventListener('submit', async function(e) {
@@ -473,14 +842,12 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         var errorEl = document.getElementById('submit-error');
         var successEl = document.getElementById('submit-success');
         var btn = document.getElementById('submitBtn');
-
         errorEl.classList.add('hidden');
         successEl.classList.add('hidden');
         btn.textContent = 'Submitting...';
         btn.disabled = true;
 
         var commaSplit = function(v) { return v ? v.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : []; };
-
         var body = {
           submitted_by: currentUser.id,
           package: document.getElementById('f-package').value.trim(),
@@ -495,28 +862,22 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
         };
 
         try {
-          var res = await fetch(SUPABASE_URL + '/rest/v1/pending_advisories', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify(body)
-          });
+          var res = await fetch(SUPABASE_URL + '/rest/v1/pending_advisories', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
           var data = await res.json();
-
           if (res.ok) {
-            successEl.textContent = 'Advisory submitted for review. A maintainer will review it shortly.';
+            successEl.textContent = 'Advisory submitted for review.';
             successEl.classList.remove('hidden');
             document.getElementById('submitForm').reset();
             loadDailyCount();
             loadSubmissions();
           } else {
-            errorEl.textContent = (data.message || data.error || 'Submission failed. You may have reached your daily limit.');
+            errorEl.textContent = data.message || data.error || 'Submission failed.';
             errorEl.classList.remove('hidden');
           }
-        } catch (err) {
+        } catch(err) {
           errorEl.textContent = 'Network error: ' + err.message;
           errorEl.classList.remove('hidden');
         }
-
         btn.textContent = 'Submit for Review';
         btn.disabled = false;
       });
@@ -527,10 +888,7 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
           headers: anonHeaders()
         }).then(function(r) { return r.json(); }).then(function(data) {
           document.getElementById('subs-loading').classList.add('hidden');
-          if (!data || data.length === 0) {
-            document.getElementById('subs-empty').classList.remove('hidden');
-            return;
-          }
+          if (!data || data.length === 0) { document.getElementById('subs-empty').classList.remove('hidden'); return; }
           var html = data.map(function(s) {
             return '<div class="sub-card">'
               + '<div class="flex flex-wrap items-center gap-2 mb-2">'
@@ -549,9 +907,7 @@ import MainLayout from '../../../../../layouts/MainLayout.astro';
 
       // ── Logout ──
       document.getElementById('logoutBtn').addEventListener('click', function() {
-        supabase.auth.signOut().then(function() {
-          window.location.href = '/cpac-trust-db/web/panel/login/';
-        });
+        supabase.auth.signOut().then(function() { window.location.href = '/cpac-trust-db/web/panel/login/'; });
       });
     })();
   </script>

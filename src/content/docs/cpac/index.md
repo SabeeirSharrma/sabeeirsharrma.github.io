@@ -72,7 +72,6 @@ cpac audit
 
 | Project | Role |
 | --- | --- |
-| [cinderos](https://github.com/SabeeirSharrma/cinderos) | Reference implementation -- ships CPAC by default |
 | [cpac-trust-db](https://github.com/SabeeirSharrma/cpac-trust-db) | Community-maintained advisory data + opt-in crowdsourced PKGBUILD snapshots |
 | [website](https://github.com/SabeeirSharrma/website) | Project site |
 
