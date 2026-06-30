@@ -62,7 +62,7 @@ const sidebarData = renderedDocs.map(({ doc, sectionId, headings }) => ({
         <div class="breadcrumbs">
           <a href="/">Home</a>
           <span class="sep">/</span>
-          <a href={`/${project}`}>{label}</a>
+          <a href={`/${project.toLowerCase()}`}>{label}</a>
           <span class="sep">/</span>
           <span class="current">Documentation</span>
         </div>

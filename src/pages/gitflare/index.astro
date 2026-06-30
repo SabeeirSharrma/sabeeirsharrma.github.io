@@ -1,0 +1,165 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+
+// Fetch latest releases from GitHub
+let releases: { tag: string; date: string; name: string; url: string; prerelease: boolean }[] = [];
+try {
+  const res = await fetch('https://api.github.com/repos/TheCinderProject/gitflare/releases?per_page=3');
+  if (res.ok) {
+    const data = await res.json();
+    releases = data.map((r: any) => ({
+      tag: r.tag_name,
+      date: new Date(r.published_at || r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      name: r.name || r.tag_name,
+      url: r.html_url,
+      prerelease: r.prerelease,
+    }));
+  }
+} catch {}
+---
+
+<MainLayout title="GitFlare" description="Self-hosted Git repository hosting server — lean, transparent, auditable.">
+  <div class="container mx-auto px-4 py-16 max-w-4xl">
+    
+    <!-- Header -->
+    <header class="mb-16 border-b border-border pb-8">
+      <h1 class="text-5xl md:text-6xl font-heading text-white mb-4 uppercase tracking-widest anim-slide-up">GitFlare</h1>
+      <p class="text-2xl text-ember-core font-heading tracking-wide anim-slide-up delay-2">Self-hosted Git repository hosting server.</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      
+      <!-- Main Content Area -->
+      <div class="md:col-span-2 space-y-12">
+        
+        <!-- Overview -->
+        <section class="reveal">
+          <h2 class="text-2xl font-heading text-white mb-4 uppercase tracking-widest heading-line">Overview</h2>
+          <div class="prose prose-invert prose-cinder">
+            <p>
+              GitFlare is a lean, self-hosted Git server built in Python. It sits as a thin 
+              layer on top of Git's own tooling — delegating all object storage and protocol 
+              handling to Git itself, while providing auth, repo management, and (eventually) 
+              a web UI on top.
+            </p>
+            <p>
+              It is <strong>not</strong> a GitHub/GitLab replacement. GitFlare is a 
+              <strong>minimal, auditable Git server</strong> — no databases, no ORM, no 
+              unnecessary infrastructure. Just Git, Python, and your bare repos.
+            </p>
+          </div>
+          <p class="text-xs text-muted-text mt-2">Builds from source, no pre-compiled binaries. How to install: <a href="/gitflare/docs">Documentation</a></p>
+        </section>
+
+        <!-- Features -->
+        <section class="reveal stagger-1">
+          <h2 class="text-2xl font-heading text-white mb-4 uppercase tracking-widest heading-line">Key Features</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-surface p-5 rounded-lg border border-border">
+              <h3 class="text-white font-bold tracking-wider mb-2">HTTP Smart Protocol</h3>
+              <p class="text-muted-text text-sm">Full clone, fetch, and push over HTTP using Git's own <code class="text-ember-light bg-card px-1.5 py-0.5 rounded text-xs">http-backend</code>.</p>
+            </div>
+            <div class="bg-surface p-5 rounded-lg border border-border">
+              <h3 class="text-white font-bold tracking-wider mb-2">Token Auth</h3>
+              <p class="text-muted-text text-sm">Per-repo access tokens with bcrypt hashing, stored in your system keychain.</p>
+            </div>
+            <div class="bg-surface p-5 rounded-lg border border-border">
+              <h3 class="text-white font-bold tracking-wider mb-2">SSH Key Auth</h3>
+              <p class="text-muted-text text-sm">SSH key management via admin CLI with <code class="text-ember-light bg-card px-1.5 py-0.5 rounded text-xs">git-shell</code> restriction.</p>
+            </div>
+            <div class="bg-surface p-5 rounded-lg border border-border">
+              <h3 class="text-white font-bold tracking-wider mb-2">Lightweight</h3>
+              <p class="text-muted-text text-sm">FastAPI + uvicorn, no database, no ORM. Just bare Git repos with flat JSON metadata.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Current Status -->
+        <section class="reveal stagger-2">
+          <h2 class="text-2xl font-heading text-white mb-4 uppercase tracking-widest heading-line">Current Status</h2>
+          <div class="bg-surface p-6 rounded-lg border border-border">
+            <div class="flex items-center gap-4 mb-4">
+              <span class="w-3 h-3 rounded-full bg-ember-core animate-pulse"></span>
+              <span class="text-white font-bold tracking-wider">Active Development</span>
+            </div>
+            <p class="text-muted-text">
+              GitFlare is currently in active development. HTTP push/pull with token auth and SSH key auth are functional. The admin CLI and credential helper are stabilizing.
+            </p>
+          </div>
+        </section>
+
+        <!-- Recent Updates -->
+        <section class="reveal stagger-3">
+          <h2 class="text-2xl font-heading text-white mb-4 uppercase tracking-widest heading-line">Recent Updates</h2>
+          {releases.length > 0 ? (
+            <ul class="space-y-4">
+              {releases.map((r) => (
+                <li class="border-l-2 border-cinder-mid pl-4 py-1">
+                  <span class="text-sm text-ember-light font-bold mb-1 block">{r.date}</span>
+                  <p class="text-muted-text">
+                    {r.name}
+                    {r.prerelease && <span class="text-xs text-cinder-mid ml-1">(pre-release)</span>}
+                    — <a href={r.url} target="_blank" rel="noopener noreferrer" class="text-ember-core hover:underline">View on GitHub</a>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="text-muted-text">No releases yet.</p>
+          )}
+        </section>
+
+      </div>
+
+      <!-- Sidebar Area -->
+      <aside class="space-y-8 reveal-right stagger-2">
+        
+        <!-- Quick Links -->
+        <div class="bg-card p-6 rounded-lg border border-border">
+          <h3 class="text-xl font-heading text-white mb-4 uppercase tracking-widest">Quick Links</h3>
+          <ul class="space-y-3">
+            <li>
+              <a href="/gitflare/docs" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
+                <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Documentation
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/TheCinderProject/gitflare" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
+                <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Source Code
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/TheCinderProject/gitflare/releases" class="flex items-center gap-2 text-muted-text hover:text-ember-light transition-colors group">
+                <span class="text-cinder-mid group-hover:text-ember-core transition-colors">▶</span> Releases
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="bg-card p-6 rounded-lg border border-border">
+          <h3 class="text-xl font-heading text-white mb-4 uppercase tracking-widest">Tech Stack</h3>
+          <ul class="space-y-2 text-sm text-muted-text">
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> Python 3.11+</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> FastAPI + Uvicorn</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> Git (http-backend)</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> bcrypt</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> keyring</li>
+          </ul>
+        </div>
+
+        <!-- Requirements -->
+        <div class="bg-card p-6 rounded-lg border border-border">
+          <h3 class="text-xl font-heading text-white mb-4 uppercase tracking-widest">Requirements</h3>
+          <ul class="space-y-2 text-sm text-muted-text">
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> Python 3.11+</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> Git installed</li>
+            <li class="flex items-center gap-2"><span class="text-ember-core">›</span> pip</li>
+          </ul>
+        </div>
+        
+      </aside>
+
+    </div>
+  </div>
+</MainLayout>
