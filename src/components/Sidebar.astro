@@ -67,7 +67,7 @@ const { project, sidebarData = [] } = Astro.props;
   </nav>
 
   <div class="sidebar-footer">
-    <a href={`/${project}`} class="back-link">
+    <a href={`/${project.toLowerCase()}`} class="back-link">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
@@ -95,8 +95,9 @@ const { project, sidebarData = [] } = Astro.props;
   function initSidebar() {
     cleanupObservers();
 
-    const sidebar = document.querySelector('[data-sidebar]');
-    if (!sidebar) return;
+    const sidebarEl = document.querySelector('[data-sidebar]');
+    if (!sidebarEl) return;
+    const sidebar = sidebarEl;
 
     const sections = document.querySelectorAll<HTMLElement>('.doc-section[data-section-id]');
     const topicLinks = sidebar.querySelectorAll<HTMLAnchorElement>('.sidebar-link[data-section-target]');
