@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import ProjectCard from './ProjectCard.astro';
+
+const projects = await getCollection('projects');
+const featured = projects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<section id="projects" class="projects section">
+  <div class="container">
+    <h2 class="projects__title">Featured projects</h2>
+    <div class="projects__grid">
+      {featured.map((project) => (
+        <ProjectCard
+          name={project.data.name}
+          tagline={project.data.tagline}
+          stack={project.data.stack}
+          status={project.data.status}
+          repoUrl={project.data.repoUrl}
+          liveUrl={project.data.liveUrl}
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .projects__title {
+    font-size: 2rem;
+    color: var(--accent-primary);
+    margin-bottom: var(--space-xl);
+  }
+
+  .projects__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-lg);
+  }
+</style>

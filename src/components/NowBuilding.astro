@@ -1,0 +1,72 @@
+---
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('projects');
+const building = projects
+  .filter((p) => p.data.status === 'building')
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<section id="now" class="now section">
+  <div class="container">
+    <h2 class="now__title">
+      <span class="now__badge">Now building</span>
+    </h2>
+    <ul class="now__list">
+      {building.map((project) => (
+        <li class="now__item">
+          <span class="now__name">{project.data.name}</span>
+          <span class="now__sep">—</span>
+          <span class="now__tagline">{project.data.tagline}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .now__title {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xl);
+  }
+
+  .now__badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: var(--space-xs) var(--space-md);
+    background-color: rgba(245, 197, 24, 0.12);
+    color: var(--accent-sun);
+    border-radius: var(--border-radius);
+  }
+
+  .now__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .now__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .now__name {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .now__sep {
+    color: var(--text-muted);
+  }
+
+  .now__tagline {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+</style>

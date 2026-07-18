@@ -1,0 +1,27 @@
+---
+import ContactLinks from './ContactLinks.astro';
+---
+
+<section id="contact" class="contact section">
+  <div class="container">
+    <h2 class="contact__title">Get in touch</h2>
+    <p class="contact__open">
+      Open to: contract work, full-time roles, and interesting collaborations.
+    </p>
+    <ContactLinks />
+  </div>
+</section>
+
+<style>
+  .contact__title {
+    font-size: 2rem;
+    color: var(--accent-primary);
+    margin-bottom: var(--space-md);
+  }
+
+  .contact__open {
+    color: var(--text-muted);
+    margin-bottom: var(--space-xl);
+    font-size: 1.1rem;
+  }
+</style>

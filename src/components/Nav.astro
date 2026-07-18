@@ -1,0 +1,84 @@
+---
+const links = [
+  { href: "#hero", label: "Home" },
+  { href: "#about", label: "About" },
+  { href: "#skills", label: "Skills" },
+  { href: "#projects", label: "Projects" },
+  { href: "#now", label: "Now" },
+  { href: "#contact", label: "Contact" },
+];
+---
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="#hero" class="nav__logo">Sabeeir Sharrma</a>
+    <ul class="nav__links">
+      {links.map((link) => (
+        <li>
+          <a href={link.href} class="nav__link">{link.label}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: rgba(11, 14, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .nav__inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav__logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-sun);
+  }
+
+  .nav__logo:hover {
+    opacity: 1;
+  }
+
+  .nav__links {
+    list-style: none;
+    display: flex;
+    gap: var(--space-lg);
+  }
+
+  .nav__link {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+
+  .nav__link:hover {
+    color: var(--accent-primary);
+    opacity: 1;
+  }
+
+  @media (max-width: 640px) {
+    .nav__links {
+      gap: var(--space-md);
+    }
+
+    .nav__link {
+      font-size: 0.75rem;
+    }
+  }
+</style>

@@ -1,0 +1,108 @@
+---
+const categories = [
+  {
+    title: "Systems & Rust",
+    description: "Low-level systems programming, CLI tools, and performance-critical applications.",
+    projects: ["CoalBox", "CPAC", "Gitka"]
+  },
+  {
+    title: "Backend / API",
+    description: "REST APIs, authentication, databases, and scalable server architectures.",
+    projects: ["GitFlare", "hyprlane-api", "cpac-trust-db"]
+  },
+  {
+    title: "Frontend",
+    description: "Modern static sites, interactive UIs, and developer tooling interfaces.",
+    projects: ["sabeeirsharrma.github.io", "hyprlane-web", "coalbox-web"]
+  }
+];
+
+const coreStack = ["Python", "Rust", "Java", "JavaScript", "TypeScript", "C++", "Git"];
+---
+
+<section id="skills" class="skills section">
+  <div class="container">
+    <h2 class="skills__title">What I can do</h2>
+    <div class="skills__stack">
+      <span class="skills__stack-label">Core stack</span>
+      <div class="skills__stack-tags">
+        {coreStack.map((tech) => (
+          <span class="tag">{tech}</span>
+        ))}
+      </div>
+    </div>
+    <div class="skills__grid">
+      {categories.map((cat) => (
+        <div class="skills__category">
+          <h3 class="skills__category-title">{cat.title}</h3>
+          <p class="skills__category-desc">{cat.description}</p>
+          <div class="skills__category-projects">
+            {cat.projects.map((p) => (
+              <span class="tag">{p}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .skills__title {
+    font-size: 2rem;
+    color: var(--accent-primary);
+    margin-bottom: var(--space-xl);
+  }
+
+  .skills__stack {
+    margin-bottom: var(--space-xl);
+  }
+
+  .skills__stack-label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: var(--space-sm);
+  }
+
+  .skills__stack-tags {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .skills__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .skills__category {
+    background-color: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .skills__category-title {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .skills__category-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+  }
+
+  .skills__category-projects {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+</style>

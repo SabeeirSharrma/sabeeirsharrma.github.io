@@ -1,0 +1,115 @@
+---
+interface Props {
+  name: string;
+  tagline: string;
+  stack: string[];
+  status: string;
+  repoUrl?: string;
+  liveUrl?: string;
+}
+
+const { name, tagline, stack, status, repoUrl, liveUrl } = Astro.props;
+
+const statusClass = status === 'v1.0' ? 'status--v1' : `status--${status}`;
+---
+
+<article class="project-card">
+  <div class="project-card__header">
+    <h3 class="project-card__name">{name}</h3>
+    <span class={`status ${statusClass}`}>{status}</span>
+  </div>
+  <p class="project-card__tagline">{tagline}</p>
+  <div class="project-card__stack">
+    {stack.map((tech) => (
+      <span class="tag">{tech}</span>
+    ))}
+  </div>
+  <div class="project-card__links">
+    {repoUrl && (
+      <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="project-card__link">
+        Repo
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    )}
+    {liveUrl && (
+      <a href={liveUrl} target="_blank" rel="noopener noreferrer" class="project-card__link">
+        Live
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    )}
+  </div>
+</article>
+
+<style>
+  .project-card {
+    background-color: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    transition: border-color 0.2s ease;
+  }
+
+  .project-card:hover {
+    border-color: var(--accent-primary);
+  }
+
+  .project-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .project-card__name {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+
+  .project-card__tagline {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .project-card__stack {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .project-card__links {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: auto;
+  }
+
+  .project-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent-primary);
+  }
+
+  .project-card__link:hover {
+    opacity: 0.8;
+  }
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+</style>

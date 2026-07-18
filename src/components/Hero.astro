@@ -1,0 +1,83 @@
+---
+import { Image } from "astro:assets";
+import avatar from "../assets/avatar.png";
+import HeroButtons from "./HeroButtons.astro";
+
+const tags = ["Rust", "Astro", "Python", "JS", "TS", "C++", "Java"];
+---
+
+<section id="hero" class="hero">
+  <div class="hero__glow"></div>
+  <div class="container">
+    <div class="hero__identity">
+      <Image
+        src={avatar}
+        alt="Sabeeir Sharrma"
+        class="hero__avatar"
+        width={96}
+        height={96}
+      />
+      <h1 class="hero__name">Sabeeir Sharrma</h1>
+    </div>
+    <p class="hero__tagline">Open-source developer & systems builder</p>
+    <div class="hero__tags">
+      {tags.map((tag) => <span class="tag">{tag}</span>)}
+    </div>
+    <HeroButtons />
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 50vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-sun) 0%, transparent 70%);
+    opacity: 0.08;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  .hero__identity {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-sm);
+  }
+
+  .hero__avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+  }
+
+  .hero__name {
+    font-size: clamp(3rem, 8vw, 6rem);
+    color: var(--text-primary);
+  }
+
+  .hero__tagline {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .hero__tags {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-xl);
+  }
+</style>
