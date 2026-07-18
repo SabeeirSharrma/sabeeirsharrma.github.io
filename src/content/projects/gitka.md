@@ -5,6 +5,7 @@ stack: [Rust, CLI]
 status: building
 links:
   repo: https://github.com/SabeeirSharrma/gitka
+  docs: https://sabeeirsharrma.github.io/gitka
 featured: true
 order: 6
 ---
