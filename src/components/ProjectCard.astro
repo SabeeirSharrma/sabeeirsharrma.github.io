@@ -4,13 +4,13 @@ interface Props {
   tagline: string;
   stack: string[];
   status: string;
-  repoUrl?: string;
-  liveUrl?: string;
+  links?: Record<string, string>;
 }
 
-const { name, tagline, stack, status, repoUrl, liveUrl } = Astro.props;
+const { name, tagline, stack, status, links } = Astro.props;
 
 const statusClass = status === 'v1.0' ? 'status--v1' : `status--${status}`;
+const linkEntries = links ? Object.entries(links) : [];
 ---
 
 <article class="project-card">
@@ -24,28 +24,20 @@ const statusClass = status === 'v1.0' ? 'status--v1' : `status--${status}`;
       <span class="tag">{tech}</span>
     ))}
   </div>
-  <div class="project-card__links">
-    {repoUrl && (
-      <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="project-card__link">
-        Repo
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-      </a>
-    )}
-    {liveUrl && (
-      <a href={liveUrl} target="_blank" rel="noopener noreferrer" class="project-card__link">
-        Live
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-      </a>
-    )}
-  </div>
+  {linkEntries.length > 0 && (
+    <div class="project-card__links">
+      {linkEntries.map(([label, url]) => (
+        <a href={url} target="_blank" rel="noopener noreferrer" class="project-card__link">
+          {label.charAt(0).toUpperCase() + label.slice(1)}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+      ))}
+    </div>
+  )}
 </article>
 
 <style>
