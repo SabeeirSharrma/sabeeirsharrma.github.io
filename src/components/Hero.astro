@@ -80,4 +80,20 @@ const tags = ["Rust", "Astro", "Python", "JS", "TS", "C++", "Java"];
     flex-wrap: wrap;
     margin-bottom: var(--space-xl);
   }
+
+  @media (max-width: 640px) {
+    .hero__identity {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+    
+    .hero__name {
+      font-size: clamp(2.5rem, 10vw, 3.5rem);
+    }
+    
+    .hero {
+      padding-top: var(--space-3xl);
+    }
+  }
 </style>
